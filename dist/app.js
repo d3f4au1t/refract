@@ -200,7 +200,8 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 document.addEventListener('scrollend', () => {
   if (!bookmarkTarget) return;
-  const offset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+  const offset = (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0)
+    + (parseFloat(getComputedStyle(bookmarkTarget).scrollMarginTop) || 0);
   const targetY = Math.min(document.documentElement.scrollHeight - window.innerHeight,
     Math.max(0, bookmarkTarget.getBoundingClientRect().top + window.scrollY - offset));
   // Ignore a late scrollend from an earlier click if another jump has started.

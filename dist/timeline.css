@@ -1,5 +1,7 @@
 /* One panoramic section: title and timeline travel together, then release down. */
 .journey-section{--journey-gutter:max(6vw,calc((100vw - 1480px)/2));--journey-progress:0;position:relative;border-block:1px solid #c4ddf126}
+/* A pinned chapter fills the space below the menu, including on anchor arrival. */
+.journey-section{scroll-margin-top:-20px}
 .journey-pin{padding:70px 0 40px}
 .journey-viewport{width:100%}
 .journey-panorama{padding-inline:var(--journey-gutter)}
