@@ -46,7 +46,10 @@ test('email verification, registration, editing and sign-out work end to end', a
   assert.match(otp, /^\d{6}$/);
   assert.ok(!f.db.prepare('SELECT value FROM verification').get().value.includes(otp));
   const before = f.db.prepare('SELECT value FROM verification').get().value;
-  assert.equal((await f.send(email)).status, 429);
+  const throttled = await f.send(email);
+  assert.equal(throttled.status, 429);
+  assert.ok(Number(throttled.headers.get('retry-after')) > 0);
+  assert.ok(throttled.data.retryAfter <= 60);
   assert.equal(f.db.prepare('SELECT value FROM verification').get().value, before, 'cooldown preserves the already emailed code');
   assert.equal((await f.verify(email, otp === '000000' ? '111111' : '000000')).status, 400);
   const verified = await f.verify(email, otp);
@@ -121,6 +124,8 @@ test('production configuration requires HTTPS and strong secrets', () => {
   assert.throws(() => readConfig({ BETTER_AUTH_SECRET: 'short' }));
   const config = readConfig({ NODE_ENV: 'production', BETTER_AUTH_URL: 'https://18.188.82.113', BETTER_AUTH_SECRET: 'x'.repeat(32), GOOGLE_CLIENT_ID: 'client', GOOGLE_CLIENT_SECRET: 'secret' });
   assert.equal(config.googleClientId, '', 'Google cannot use a public IP callback');
+  const ipv6 = readConfig({ NODE_ENV: 'production', BETTER_AUTH_URL: 'https://[2001:db8::1]', BETTER_AUTH_SECRET: 'x'.repeat(32), GOOGLE_CLIENT_ID: 'client', GOOGLE_CLIENT_SECRET: 'secret' });
+  assert.equal(ipv6.googleClientId, '', 'IPv6 literals also cannot be Google callback hosts');
   assert.match(verificationEmail('123456').text, /123456/);
   assert.throws(() => verificationEmail('<html>'));
 });
@@ -132,4 +137,48 @@ test('HTTPS deployments issue secure session cookies', async t => {
   assert.equal(verified.status, 200);
   assert.match(verified.headers.get('set-cookie'), /; Secure/i);
   assert.match(verified.headers.get('set-cookie'), /HttpOnly/i);
+});
+
+test('parallel requests send only one code and preserve its validity', async t => {
+  const f = await fixture(t);
+  const responses = await Promise.all(Array.from({ length: 8 }, () => f.send('parallel@example.com')));
+  assert.equal(responses.filter(response => response.status === 200).length, 1);
+  assert.equal(responses.filter(response => response.status === 429).length, 7);
+  assert.equal(f.emails.length, 1);
+  assert.equal((await f.verify('parallel@example.com', f.emails[0].otp)).status, 200);
+});
+
+test('resending replaces the previous code and hourly limits report the actual wait', async t => {
+  const f = await fixture(t);
+  const email = 'resend@example.com';
+  for (let i = 0; i < 5; i++) {
+    f.db.prepare('UPDATE email_cooldown SET next_allowed = 0').run();
+    assert.equal((await f.send(email)).status, 200);
+  }
+  assert.equal(f.emails.length, 5);
+  f.db.prepare('UPDATE email_cooldown SET next_allowed = 0').run();
+  const throttled = await f.send(email);
+  assert.equal(throttled.status, 429);
+  assert.ok(throttled.data.retryAfter > 3500, 'hourly limit is not presented as a one-minute wait');
+  assert.equal(Number(throttled.headers.get('retry-after')), throttled.data.retryAfter);
+  const latest = f.emails[4].otp;
+  const old = f.emails.find(message => message.otp !== latest)?.otp;
+  assert.ok(old);
+  assert.equal((await f.verify(email, old)).status, 400);
+  assert.equal((await f.verify(email, latest)).status, 200);
+});
+
+test('verified participants can only read and edit their own registration', async t => {
+  const f = await fixture(t);
+  await f.send('first@example.com');
+  const first = await f.verify('first@example.com', f.emails[0].otp);
+  const firstRecord = await f.request('/api/registration', { name: 'First Student', student: true }, first.cookie);
+  await f.send('second@example.com');
+  const second = await f.verify('second@example.com', f.emails[1].otp);
+  assert.equal((await f.request('/api/registration', undefined, second.cookie)).data.registration, null);
+  const secondRecord = await f.request('/api/registration', { name: 'Second Student', student: true, user_id: first.data.user.id }, second.cookie);
+  assert.notEqual(secondRecord.data.registration.reference, firstRecord.data.registration.reference);
+  const unchanged = await f.request('/api/registration', undefined, first.cookie);
+  assert.equal(unchanged.data.registration.name, 'First Student');
+  assert.equal(unchanged.data.user.email, 'first@example.com');
 });

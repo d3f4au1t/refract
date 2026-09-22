@@ -34,7 +34,9 @@ export async function createApp(config, overrides = {}) {
     const now = Date.now();
     const row = db.prepare('SELECT * FROM email_cooldown WHERE key = ?').get(key);
     if (row && (row.next_allowed > now || (row.window_start > now - 3600000 && row.send_count >= 5))) {
-      throw new APIError('TOO_MANY_REQUESTS', { code: 'EMAIL_COOLDOWN', message: 'Please wait before requesting another code.' });
+      const nextAllowed = Math.max(row.next_allowed, row.send_count >= 5 ? row.window_start + 3600000 : 0);
+      const retryAfter = Math.max(1, Math.ceil((nextAllowed - now) / 1000));
+      throw new APIError('TOO_MANY_REQUESTS', { code: 'EMAIL_COOLDOWN', message: 'Please wait before requesting another code.', retryAfter }, { 'Retry-After': String(retryAfter) });
     }
     const freshWindow = !row || row.window_start <= now - 3600000;
     db.prepare(`INSERT INTO email_cooldown (key, next_allowed, window_start, send_count) VALUES (?, ?, ?, ?)

@@ -11,7 +11,8 @@ export function readConfig(env = process.env) {
   if (!env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET.length < 32) throw new Error('Set BETTER_AUTH_SECRET to a random secret of at least 32 characters.');
   const port = Number(env.PORT || 3001);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT must be a valid port number.');
-  const googleHostAllowed = !isIP(url.hostname) || ['127.0.0.1', '[::1]'].includes(url.hostname);
+  const hostname = url.hostname.replace(/^\[|\]$/g, '');
+  const googleHostAllowed = !isIP(hostname) || ['127.0.0.1', '::1'].includes(hostname);
   return {
     production, port, host: env.HOST || '127.0.0.1', baseURL: url.origin,
     secret: env.BETTER_AUTH_SECRET,

@@ -49,6 +49,9 @@
 .data-note p{font-size:.72rem;line-height:1.8;max-width:52ch;padding:6px 0;color:#a8b6c4}
 .service-notice,.form-error{font-size:.81rem;line-height:1.7;border:1px solid #b8d9ee33;background:#b8d9ee08;border-radius:8px;padding:14px 16px;margin-bottom:24px;color:#ccddea}
 .form-error{border-color:#e8ada946;background:#e8ada90a;color:#ffd6d0;outline:none}
+.retry-connection{margin-top:-18px;margin-bottom:18px}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.registration-page input:disabled{opacity:.55;cursor:not-allowed}
 .inline-back,.quiet-button{display:inline-flex;align-items:center;gap:10px;border:0;background:transparent;color:#bdcdda;font:inherit;font-size:.76rem;min-height:44px;padding:9px 0;text-align:left;transition:color .2s}
 .inline-back{margin:-18px 0 18px}
 .quiet-button:hover,.inline-back:hover{color:#fff}
