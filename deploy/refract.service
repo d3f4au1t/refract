@@ -1,0 +1,27 @@
+[Unit]
+Description=Refract registration service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=refract
+Group=refract
+WorkingDirectory=/opt/refract/current
+EnvironmentFile=/etc/refract/refract.env
+ExecStart=/usr/bin/node server/index.mjs
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+UMask=0077
+StateDirectory=refract
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/refract
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

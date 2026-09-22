@@ -2,6 +2,20 @@
   "name": "refract-prisms",
   "version": "1.0.0",
   "private": true,
-  "description": "Refract — a proposed PRISMS student hackathon",
-  "scripts": { "dev": "python3 -m http.server 4173 --directory dist", "check": "node --check dist/app.js && node --check dist/teams.js" }
+  "description": "Refract \u2014 a proposed PRISMS student hackathon",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env server/index.mjs",
+    "start": "node --env-file-if-exists=.env server/index.mjs",
+    "check": "node --check dist/app.js && node --check dist/teams.js && node --check dist/register/register.js && node --check server/app.mjs && node --check server/index.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "better-auth": "1.7.5",
+    "express": "5.2.1",
+    "resend": "6.28.1"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  }
 }

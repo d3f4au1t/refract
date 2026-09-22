@@ -3,7 +3,6 @@ const header = document.querySelector('#header');
 const hero = document.querySelector('.hero');
 const menuButton = document.querySelector('.menu-toggle');
 const menu = document.querySelector('#mobile-nav');
-const dialog = document.querySelector('#registration-dialog');
 const closeMenu = (restoreFocus = false) => {
   const wasOpen = !menu.hidden;
   menu.hidden = true;
@@ -29,26 +28,6 @@ menu.querySelectorAll('a:not([data-registration])').forEach(link => link.addEven
 }));
 document.addEventListener('focusin', event => {
   if (!menu.hidden && !menu.contains(event.target) && !menuButton.contains(event.target)) closeMenu();
-});
-let registrationTrigger = null;
-document.querySelectorAll('[data-registration]').forEach(button => {
-  button.setAttribute('aria-haspopup', 'dialog');
-  button.addEventListener('click', event => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    registrationTrigger = menu.contains(button) ? menuButton : button;
-    closeMenu();
-    dialog.showModal();
-    document.body.classList.add('dialog-open');
-  });
-});
-const closeDialog = () => dialog.close();
-dialog.querySelector('.dialog-close').addEventListener('click', closeDialog);
-dialog.querySelector('.dialog-done').addEventListener('click', closeDialog);
-dialog.addEventListener('click', event => { const box = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)) closeDialog(); });
-dialog.addEventListener('close', () => {
-  document.body.classList.remove('dialog-open');
-  registrationTrigger?.focus({ preventScroll: true });
 });
 document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(true); });
 

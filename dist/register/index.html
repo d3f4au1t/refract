@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="robots" content="noindex">
+  <meta name="description" content="Register your interest in Refract, the PRISMS student hackathon.">
+  <title>Register — Refract</title>
+  <link rel="icon" href="/assets/refract-symbol.png" type="image/png">
+  <link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css?v=local-fonts-1">
+  <link rel="stylesheet" href="/register/register.css?v=1">
+  <script src="/register/register.js?v=1" defer></script>
+</head>
+<body class="registration-page">
+  <header class="registration-header">
+    <a class="registration-brand" href="/" aria-label="Refract home"><span class="registration-symbol" aria-hidden="true"></span>REFRACT</a>
+    <a class="return-link" href="/"><span aria-hidden="true">↖</span> Back to the event</a>
+  </header>
+  <main class="registration-layout">
+    <aside class="registration-art" aria-label="Refract, PRISMS student hackathon">
+      <p class="art-eyebrow">PRISMS STUDENT HACKATHON</p>
+      <img src="/assets/refract-background-ai.png" alt="" width="1672" height="941" fetchpriority="high">
+      <div class="art-caption"><p>What will<br>you make?</p><span>PRISMS · Date to be announced</span></div>
+    </aside>
+    <section class="registration-panel" aria-labelledby="registration-title">
+      <div class="registration-inner">
+        <ol class="registration-steps" aria-label="Registration progress"><li data-step="1" aria-current="step"><span>01</span> Verify email</li><li data-step="2"><span>02</span> Your details</li></ol>
+        <div id="service-notice" class="service-notice" role="status" hidden></div>
+        <div id="form-error" class="form-error" role="alert" tabindex="-1" hidden></div>
+        <div id="start-view" class="registration-view">
+          <h1 id="registration-title" tabindex="-1">Register for<br>Refract.</h1>
+          <p class="registration-description">Use Google or verify your email to get started.</p>
+          <button id="google-sign-in" class="provider-button" type="button" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.38a4.61 4.61 0 0 1-2 3.03v2.52h3.24c1.9-1.75 2.98-4.33 2.98-7.38Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.43l-3.24-2.52c-.9.6-2.05.96-3.38.96-2.61 0-4.82-1.76-5.61-4.13H3.05v2.59A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.39 13.88A6 6 0 0 1 6.07 12c0-.65.11-1.29.32-1.88V7.53H3.05A10 10 0 0 0 2 12c0 1.61.39 3.14 1.05 4.47l3.34-2.59Z"/><path fill="#EA4335" d="M12 5.99c1.47 0 2.79.51 3.83 1.51l2.87-2.87A9.61 9.61 0 0 0 12 2a10 10 0 0 0-8.95 5.53l3.34 2.59C7.18 7.75 9.39 5.99 12 5.99Z"/></svg>
+            <span>Continue with Google</span>
+          </button>
+          <div class="registration-divider"><span>or use your email</span></div>
+          <form id="email-form">
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" maxlength="254" required aria-describedby="email-help" disabled>
+            <p class="field-help" id="email-help">We’ll email you a six-digit code. No password needed.</p>
+            <button class="registration-submit" type="submit" disabled><span>Continue with email</span><span aria-hidden="true">→</span></button>
+          </form>
+        </div>
+        <div id="verify-view" class="registration-view" hidden>
+          <button id="change-email" type="button" class="inline-back"><span aria-hidden="true">←</span> Use another email</button>
+          <h1 id="verify-title" tabindex="-1">Check your<br>inbox.</h1>
+          <p class="registration-description">Enter the code sent to <strong id="verification-email"></strong>.</p>
+          <form id="code-form">
+            <label for="code">Verification code</label>
+            <input id="code" class="code-input" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="000000" required aria-describedby="code-help">
+            <p class="field-help" id="code-help">Your code expires after 10 minutes.</p>
+            <button class="registration-submit" type="submit"><span>Verify email</span><span aria-hidden="true">→</span></button>
+          </form>
+          <div class="resend-row"><span>No email? Check your spam folder.</span><button id="resend-code" class="quiet-button" type="button">Resend code</button></div>
+          <p id="verification-status" class="field-help" role="status"></p>
+        </div>
+        <div id="details-view" class="registration-view" hidden>
+          <p class="verified-label"><span aria-hidden="true">✓</span> Email verified</p>
+          <h1 id="details-title" tabindex="-1">A little<br>about you.</h1>
+          <p class="registration-description">You’re signing up with <strong class="account-email"></strong>.</p>
+          <form id="details-form">
+            <label for="full-name">Your name</label>
+            <input id="full-name" name="name" type="text" autocomplete="name" minlength="2" maxlength="100" placeholder="First and last name" required>
+            <label class="checkbox-label" for="prisms-student"><input id="prisms-student" name="student" type="checkbox" required><span>I’m a current PRISMS student.</span></label>
+            <button class="registration-submit" type="submit"><span>Complete registration</span><span aria-hidden="true">→</span></button>
+          </form>
+          <button class="quiet-button sign-out" type="button">Use a different account</button>
+        </div>
+        <div id="complete-view" class="registration-view" hidden>
+          <div class="success-mark" aria-hidden="true">✓</div>
+          <h1 id="complete-title" tabindex="-1">You’re on<br>the list.</h1>
+          <p class="registration-description">Your registration is saved, <strong id="registered-name"></strong>. The event date and places are still awaiting school approval.</p>
+          <dl class="registration-receipt"><div><dt>Email</dt><dd class="account-email"></dd></div><div><dt>Reference</dt><dd id="registration-reference"></dd></div><div><dt>Status</dt><dd>Awaiting event confirmation</dd></div></dl>
+          <a class="registration-submit" href="/"><span>Back to the event</span><span aria-hidden="true">↗</span></a>
+          <div class="account-actions"><button id="edit-details" class="quiet-button" type="button">Edit your details</button><button class="quiet-button sign-out" type="button">Sign out</button></div>
+        </div>
+        <p class="registration-note">Date and school approval are still pending. Registering does not confirm a place.</p>
+        <details class="data-note"><summary>What information do we keep?</summary><p>Your name, verified email and registration status are stored for the Refract organizers. Google sign-in shares your basic profile and email address, not your inbox or password.</p></details>
+        <noscript><p class="service-notice">Turn on JavaScript to verify your email and register. You can still <a href="/">read about the event</a>.</p></noscript>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

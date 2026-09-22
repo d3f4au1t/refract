@@ -1,20 +1,23 @@
 # Refract — A PRISMS Student Hackathon
 
-Responsive static event website, with a silver and ice-blue visual identity based on the supplied Refract brand assets. Content follows the September 2026 Refract proposal; approval, schedule, sponsorship, and registration remain explicitly unconfirmed.
+Responsive event website with an AWS-ready registration backend, with a silver and ice-blue visual identity based on the supplied Refract brand assets. Content follows the September 2026 Refract proposal; approval, schedule, sponsorship, and registration remain explicitly unconfirmed.
 
-Run `npm run dev`, then open http://127.0.0.1:4173. Or serve the `dist` folder using any static host. No build or installation is required. Run `npm run check` to check JavaScript syntax.
+Use Node 22.13+ (Node 24 recommended). Run `npm ci`, copy `.env.example` to `.env`, and set `BETTER_AUTH_SECRET` with `openssl rand -hex 32`. Run `npm run dev`, then open http://localhost:3001. Run `npm run check` and `npm test` before deployment. The landing page is still static; registration needs the Node backend.
 
 ## Editing
 - `dist/index.html`: public copy, schedule, targets, FAQ, and registration information.
 - `dist/styles.css`: base layout, typography, and the fixed logo/glass treatment.
 - `dist/polish.css`: floating navigation, editorial styling, illustrations, and motion.
 - `dist/timeline.css`: responsive timeline chapters and pinned horizontal layout.
-- `dist/app.js`: navigation, mobile menu, accessible registration dialog, and scroll-driven timeline.
+- `dist/app.js`: navigation, mobile menu, and scroll-driven timeline.
+- `dist/register/`: registration, email-code entry, participant details and confirmation.
+- `server/`: Better Auth, Resend delivery, registration API and SQLite storage.
+- `test/`: verification, session, registration and security integration tests.
 - `dist/teams.css` and `dist/teams.js`: the 60-person animation and replay, with no boxes around the teams.
 - `dist/assets/`: supplied wordmark, light symbol, and simplified mark.
 - `dist/assets/fonts/`: locally served variable fonts and their OFL licenses.
 
-Registration intentionally displays event status and does not collect or submit personal data. Replace this flow with an approved registration destination once available. The private proposal PDF is not included in the public website.
+Registration lives at `/register/`. Google sign-in or a Resend email code verifies the account, then the student supplies a name and confirms PRISMS eligibility. The backend saves one pending registration per verified account in SQLite. Sign-in methods remain unavailable until configured. The private proposal PDF is not included in the public website. See [AWS setup](deploy/README.md) for deployment and private credentials.
 
 Original brand assets are retained from the user's supplied files:
 - `dist/assets/refract-wordmark.png`: earlier supplied wordmark retained as a source asset.
@@ -32,7 +35,7 @@ As the leading glass edge crosses the central flare, the exposed light holds nea
 
 ## Motion and interactions
 
-The transparent navigation stays visible while scrolling. Section entrances use staggered reveals; the project directions have drawn vector illustrations and pointer-responsive highlights, and a five-chapter sample timeline moves horizontally with vertical scrolling before releasing back into the page. Hero text, buttons, the mobile menu, FAQ answers, and the participation dialog have coordinated transitions. The main logo stays fixed. Reduced-motion preferences disable the decorative animations, and content remains visible when JavaScript is unavailable.
+The transparent navigation stays visible while scrolling. Section entrances use staggered reveals; the project directions have drawn vector illustrations and pointer-responsive highlights, and a five-chapter sample timeline moves horizontally with vertical scrolling before releasing back into the page. Hero text, buttons, the mobile menu, FAQ answers, and registration views have coordinated transitions. The main logo stays fixed. Reduced-motion preferences disable the decorative animations, and content remains visible when JavaScript is unavailable.
 
 ## Sample timeline
 
@@ -46,7 +49,7 @@ A fixed copy of the background, clipped to the menu height, covers scrolling con
 
 Navigation links highlight their destination immediately on activation. Intermediate sections do not change the highlight during a bookmark's smooth scroll. Position-based tracking resumes when scrolling continues, including wheel, touch, and keyboard interruptions. The browser's native hash navigation and history remain intact.
 
-The mobile menu includes registration information. Keyboard activation focuses the first link; Escape closes the menu and restores focus to its trigger. Selecting a section transfers focus to that section. The registration dialog returns focus to its opener, or to the menu trigger when opened on mobile. Registration links lead to the FAQ when JavaScript is unavailable.
+The mobile menu includes registration information. Keyboard activation focuses the first link; Escape closes the menu and restores focus to its trigger. Selecting a section transfers focus to that section. Registration links navigate to the dedicated page. The registration page explains that JavaScript is required when it is unavailable.
 
 Funding goals count up from zero once per page load when each amount first enters the viewport. The full dollar value appears briefly before the compact $10K+ / $3K+ label returns. Leaving and re-entering the section does not restart the counters. Reduced-motion users and assistive technology receive the final amounts directly.
 
