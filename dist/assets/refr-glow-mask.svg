@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+  <defs>
+    <filter id="feather" x="140" y="325" width="720" height="250" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+  <!-- A soft, curved light envelope around REFR, following the final R's bowl. -->
+  <path d="M210 363H762C796 363 819 389 819 425V478C819 511 800 534 764 534H210Q184 534 184 508V389Q184 363 210 363Z" fill="white" filter="url(#feather)"/>
+</svg>
