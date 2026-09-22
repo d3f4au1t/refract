@@ -128,11 +128,14 @@ window.matchMedia('(min-width: 761px)').addEventListener('change', event => {
 });
 
 // Let native vertical scrolling carry the timeline sideways, then release it.
-// Only the chapter track moves; the page, glass, and background keep their geometry.
+// The opening title and every chapter share one panoramic track, like the reference.
+// The page, glass, and background keep their original geometry.
 const journey = document.querySelector('.journey-section');
 const journeyPin = journey.querySelector('.journey-pin');
 const journeyViewport = journey.querySelector('.journey-viewport');
 const journeyTrack = journey.querySelector('.journey-track');
+const journeyPanorama = journey.querySelector('.journey-panorama');
+const journeyIntro = journey.querySelector('.journey-intro');
 const journeyChapters = [...journey.querySelectorAll('.journey-chapter')];
 const journeyCount = journey.querySelector('.journey-count');
 const journeyHint = journey.querySelector('.journey-scroll-hint>span');
@@ -146,7 +149,7 @@ const updateJourney = () => {
   journeyFrame = 0;
   if (!journey.classList.contains('is-horizontal')) return;
   const progress = Math.max(0, Math.min(1, (journeyTop - journey.getBoundingClientRect().top) / journeyTravel));
-  journeyTrack.style.transform = `translate3d(${-journeyTravel * progress}px,0,0)`;
+  journeyPanorama.style.transform = `translate3d(${-journeyTravel * progress}px,0,0)`;
   journey.style.setProperty('--journey-progress', progress.toFixed(4));
   const chapter = Math.min(journeyChapters.length - 1, Math.floor(progress * journeyChapters.length));
   if (chapter !== currentChapter) {
@@ -166,11 +169,11 @@ const requestJourneyUpdate = () => {
 };
 const measureJourney = () => {
   journeyMeasureFrame = 0;
-  // Small or zoomed viewports and reduced-motion readers get the full vertical list.
-  const horizontal = !reducedMotion.matches && window.innerHeight >= 650;
+  // Compact desktop windows still pan; only very short views use the vertical list.
+  const horizontal = !reducedMotion.matches && window.innerHeight >= 480;
   journey.classList.toggle('is-horizontal', horizontal);
   journey.style.removeProperty('height');
-  journeyTrack.style.removeProperty('transform');
+  journeyPanorama.style.removeProperty('transform');
   if (!horizontal) {
     journeyTravel = 0;
     journey.classList.remove('is-complete');
@@ -179,10 +182,9 @@ const measureJourney = () => {
   journeyTop = header.offsetHeight;
   journey.style.setProperty('--journey-top', `${journeyTop}px`);
   journey.style.setProperty('--journey-height', `${window.innerHeight - journeyTop}px`);
-  const end = journeyTrack.lastElementChild.getBoundingClientRect().right - journeyTrack.getBoundingClientRect().left;
-  const endPadding = parseFloat(getComputedStyle(journeyTrack).paddingRight);
-  journeyTravel = Math.max(1, end + endPadding - journeyViewport.clientWidth);
-  if ([...journey.querySelectorAll('.journey-card')].some(card => card.scrollHeight > card.clientHeight + 1)) {
+  journeyTravel = Math.max(1, journeyPanorama.scrollWidth - journeyViewport.clientWidth);
+  const cardsOverflow = [...journey.querySelectorAll('.journey-card')].some(card => card.scrollHeight > card.clientHeight + 1);
+  if (cardsOverflow || journeyIntro.scrollHeight > journeyViewport.clientHeight + 1) {
     journey.classList.remove('is-horizontal', 'is-complete');
     journeyTravel = 0;
     return;
