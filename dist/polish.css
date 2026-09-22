@@ -267,15 +267,15 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
 .section-label{font-family:var(--sans);font-size:.75rem;letter-spacing:.035em}
 .section-label::before{width:20px}
 .event-strip div>span{font-family:var(--sans);letter-spacing:.035em;font-size:.68rem}
-.hero-topline .eyebrow{font-size:.68rem;letter-spacing:.075em}
+.hero-topline .eyebrow{font-size:.68rem;letter-spacing:.075em;max-width:none}
 .scroll-cue{font-size:.65rem;letter-spacing:.03em}
 .intro-heading .body-copy{max-width:410px}
 .directions>div{min-height:365px}
 .directions h3{font-size:1.25rem;min-height:0}
 .directions p{margin-bottom:0}
-.journey-status{border:0;border-radius:0;padding:0;font-size:.75rem;letter-spacing:.02em}
-.journey-intro-cue{letter-spacing:.035em}
-.journey-card-top{justify-content:flex-end}
+.journey-intro .journey-status{border:0;border-radius:0;padding:0;font-size:.75rem;letter-spacing:.02em}
+.journey-intro .journey-intro-cue{letter-spacing:.035em}
+.journey-card .journey-card-top{justify-content:flex-end}
 .team-formation .formation-team-size{padding-top:0}
 .team-formation .formation-heading{align-items:center}
 @media(max-width:760px){
