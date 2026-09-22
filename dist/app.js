@@ -179,7 +179,14 @@ const measureJourney = () => {
   journeyTop = header.offsetHeight;
   journey.style.setProperty('--journey-top', `${journeyTop}px`);
   journey.style.setProperty('--journey-height', `${window.innerHeight - journeyTop}px`);
-  journeyTravel = Math.max(1, journeyTrack.scrollWidth - journeyViewport.clientWidth);
+  const end = journeyTrack.lastElementChild.getBoundingClientRect().right - journeyTrack.getBoundingClientRect().left;
+  const endPadding = parseFloat(getComputedStyle(journeyTrack).paddingRight);
+  journeyTravel = Math.max(1, end + endPadding - journeyViewport.clientWidth);
+  if ([...journey.querySelectorAll('.journey-card')].some(card => card.scrollHeight > card.clientHeight + 1)) {
+    journey.classList.remove('is-horizontal', 'is-complete');
+    journeyTravel = 0;
+    return;
+  }
   journey.style.height = `${journeyPin.offsetHeight + journeyTravel}px`;
   updateJourney();
 };
