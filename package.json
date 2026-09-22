@@ -3,5 +3,5 @@
   "version": "1.0.0",
   "private": true,
   "description": "Refract — a proposed PRISMS student hackathon",
-  "scripts": { "dev": "python3 -m http.server 4173 --directory dist", "check": "node --check dist/app.js" }
+  "scripts": { "dev": "python3 -m http.server 4173 --directory dist", "check": "node --check dist/app.js && node --check dist/teams.js" }
 }

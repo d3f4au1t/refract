@@ -1,19 +1,56 @@
+document.documentElement.classList.add('js');
 const header = document.querySelector('#header');
 const hero = document.querySelector('.hero');
 const menuButton = document.querySelector('.menu-toggle');
 const menu = document.querySelector('#mobile-nav');
 const dialog = document.querySelector('#registration-dialog');
-const closeMenu = () => { menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); menuButton.setAttribute('aria-label', 'Open navigation'); };
+const closeMenu = (restoreFocus = false) => {
+  const wasOpen = !menu.hidden;
+  menu.hidden = true;
+  menuButton.setAttribute('aria-expanded', 'false');
+  menuButton.setAttribute('aria-label', 'Open navigation');
+  if (wasOpen && restoreFocus) menuButton.focus({ preventScroll: true });
+};
 new IntersectionObserver(([entry]) => header.classList.toggle('scrolled', !entry.isIntersecting), { rootMargin: '-90px 0px 0px 0px' }).observe(hero);
-menuButton.addEventListener('click', () => { const open = menu.hidden; menu.hidden = !open; menuButton.setAttribute('aria-expanded', String(open)); menuButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation'); });
-menu.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
-document.querySelectorAll('[data-registration]').forEach(button => button.addEventListener('click', () => { closeMenu(); dialog.showModal(); document.body.classList.add('dialog-open'); }));
+menuButton.addEventListener('click', event => {
+  const open = menu.hidden;
+  menu.hidden = !open;
+  menuButton.setAttribute('aria-expanded', String(open));
+  menuButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+  if (open && event.detail === 0) menu.querySelector('a').focus({ preventScroll: true });
+});
+menu.querySelectorAll('a:not([data-registration])').forEach(link => link.addEventListener('click', () => {
+  closeMenu();
+  const destination = document.querySelector(link.hash);
+  if (destination) {
+    destination.setAttribute('tabindex', '-1');
+    destination.focus({ preventScroll: true });
+  }
+}));
+document.addEventListener('focusin', event => {
+  if (!menu.hidden && !menu.contains(event.target) && !menuButton.contains(event.target)) closeMenu();
+});
+let registrationTrigger = null;
+document.querySelectorAll('[data-registration]').forEach(button => {
+  button.setAttribute('aria-haspopup', 'dialog');
+  button.addEventListener('click', event => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    registrationTrigger = menu.contains(button) ? menuButton : button;
+    closeMenu();
+    dialog.showModal();
+    document.body.classList.add('dialog-open');
+  });
+});
 const closeDialog = () => dialog.close();
 dialog.querySelector('.dialog-close').addEventListener('click', closeDialog);
 dialog.querySelector('.dialog-done').addEventListener('click', closeDialog);
 dialog.addEventListener('click', event => { const box = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)) closeDialog(); });
-dialog.addEventListener('close', () => document.body.classList.remove('dialog-open'));
-document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
+dialog.addEventListener('close', () => {
+  document.body.classList.remove('dialog-open');
+  registrationTrigger?.focus({ preventScroll: true });
+});
+document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(true); });
 
 const backdrop = document.querySelector('.fixed-backdrop');
 const backgroundLogo = backdrop.querySelector('img');
@@ -111,7 +148,7 @@ document.querySelectorAll('.directions>div').forEach(card => {
 // A bookmark selects its destination immediately. Ignore intermediate sections
 // during native smooth scrolling; return to position tracking on the next scroll.
 const navigationGroups = [header.querySelector('nav'), menu].map(nav =>
-  [...nav.querySelectorAll('a')].map(link => ({ link, section: document.querySelector(link.hash) }))
+  [...nav.querySelectorAll('a:not([data-registration])')].map(link => ({ link, section: document.querySelector(link.hash) }))
 );
 const navigationLinks = navigationGroups.flat().map(item => item.link);
 let bookmarkTarget = null;
@@ -203,7 +240,11 @@ const journeyIntro = journey.querySelector('.journey-intro');
 const journeyChapters = [...journey.querySelectorAll('.journey-chapter')];
 const journeyCount = journey.querySelector('.journey-count');
 const journeyHint = journey.querySelector('.journey-scroll-hint>span');
+const journeyPrevious = journey.querySelector('.journey-previous');
+const journeyNext = journey.querySelector('.journey-next');
 let journeyTravel = 0;
+let journeyCenters = [];
+let journeyStops = [];
 let journeyTop = 0;
 let journeyFrame = 0;
 let journeyMeasureFrame = 0;
@@ -215,7 +256,10 @@ const updateJourney = () => {
   const progress = Math.max(0, Math.min(1, (journeyTop - journey.getBoundingClientRect().top) / journeyTravel));
   journeyPanorama.style.transform = `translate3d(${-journeyTravel * progress}px,0,0)`;
   journey.style.setProperty('--journey-progress', progress.toFixed(4));
-  const chapter = Math.min(journeyChapters.length - 1, Math.floor(progress * journeyChapters.length));
+  const travel = journeyTravel * progress;
+  // Track the card nearest the viewport's center, rather than equal scroll slices.
+  const chapter = journeyCenters.reduce((closest, center, index) =>
+    Math.abs(center - travel) < Math.abs(journeyCenters[closest] - travel) ? index : closest, 0);
   if (chapter !== currentChapter) {
     currentChapter = chapter;
     journeyCount.textContent = String(chapter + 1).padStart(2, '0');
@@ -225,6 +269,8 @@ const updateJourney = () => {
     });
   }
   const complete = progress >= .995;
+  journeyPrevious.disabled = progress <= .005;
+  journeyNext.disabled = complete;
   journey.classList.toggle('is-complete', complete);
   journeyHint.textContent = complete ? 'Continue down' : 'Scroll to continue';
 };
@@ -247,6 +293,12 @@ const measureJourney = () => {
   journey.style.setProperty('--journey-top', `${journeyTop}px`);
   journey.style.setProperty('--journey-height', `${window.innerHeight - journeyTop}px`);
   journeyTravel = Math.max(1, journeyPanorama.scrollWidth - journeyViewport.clientWidth);
+  const panoramaLeft = journeyPanorama.getBoundingClientRect().left;
+  journeyCenters = journeyChapters.map(chapter => {
+    const bounds = chapter.getBoundingClientRect();
+    return bounds.left - panoramaLeft + bounds.width / 2 - journeyViewport.clientWidth / 2;
+  });
+  journeyStops = [...new Set([0, ...journeyCenters.map(center => Math.max(0, Math.min(journeyTravel, center))), journeyTravel])];
   const cardsOverflow = [...journey.querySelectorAll('.journey-card')].some(card => card.scrollHeight > card.clientHeight + 1);
   if (cardsOverflow || journeyIntro.scrollHeight > journeyViewport.clientHeight + 1) {
     journey.classList.remove('is-horizontal', 'is-complete');
@@ -267,6 +319,18 @@ reducedMotion.addEventListener('change', requestJourneyMeasure);
 new ResizeObserver(requestJourneyMeasure).observe(journeyViewport);
 document.fonts.ready.then(requestJourneyMeasure);
 measureJourney();
+
+const moveJourney = direction => {
+  if (!journey.classList.contains('is-horizontal')) return;
+  const sectionTop = journey.getBoundingClientRect().top + window.scrollY;
+  const travel = Math.max(0, Math.min(journeyTravel, window.scrollY - sectionTop + journeyTop));
+  const destination = direction > 0
+    ? journeyStops.find(stop => stop > travel + 2) ?? journeyTravel
+    : journeyStops.findLast(stop => stop < travel - 2) ?? 0;
+  window.scrollTo({ top: sectionTop - journeyTop + destination, behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+};
+journeyPrevious.addEventListener('click', () => moveJourney(-1));
+journeyNext.addEventListener('click', () => moveJourney(1));
 
 // Only a header resize changes the fixed menu mask; scrolling never moves it.
 const measureMenu = () => {

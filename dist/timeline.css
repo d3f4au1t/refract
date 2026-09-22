@@ -105,3 +105,29 @@
   .is-horizontal .journey-takeaway{font-size:.6875rem;padding-top:11px}
   .is-horizontal .journey-footer{margin-top:14px}
 }
+
+/* Native scroll remains primary; these controls also work by touch or keyboard. */
+.journey-controls{display:none;gap:8px;flex-shrink:0}
+.is-horizontal .journey-controls{display:flex}
+.journey-controls button{display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid #c4deef42;border-radius:50%;background:transparent;color:#dcecf8;font:inherit;font-size:1.15rem;transition:background .2s,border-color .2s,color .2s}
+.journey-controls button:hover:not(:disabled){border-color:#d2e9faa0;background:#c4dff017}
+.journey-controls button:disabled{opacity:.3;cursor:default}
+.journey-skip{min-height:44px}
+.journey-card h3{letter-spacing:-.035em}
+.journey-number{font-variant-numeric:tabular-nums}
+@media(max-width:760px){
+ .journey-footer{gap:12px;flex-wrap:wrap}
+ .journey-progress{margin-right:auto}
+ .journey-progress-line{width:36px}
+ .journey-skip{margin-left:0}
+ .journey-controls{gap:6px}
+ .journey-controls button{width:40px;height:44px}
+ .journey-card-copy>p{line-height:1.8}
+}
+.journey-footer{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+.journey-progress{justify-self:start}
+.is-horizontal .journey-scroll-hint{display:none}
+.journey-controls{justify-self:center}
+.journey-skip{justify-self:end;margin-left:0}
+.journey-section:not(.is-horizontal) .journey-skip{grid-column:1/-1}
+@media(max-width:380px){.journey-progress-line{display:none}}

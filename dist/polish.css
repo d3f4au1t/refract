@@ -289,3 +289,97 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
  .directions h3{font-size:1.55rem}
  .team-formation .formation-team-size{padding-top:0}
 }
+
+/* Finish: consistent spacing, quieter controls, and readable small type. */
+html{scrollbar-gutter:stable;scroll-padding-top:calc(var(--menu-height) + 20px)}
+html:not(.js) .menu-toggle{visibility:hidden}
+.header{display:grid;grid-template-columns:1fr auto 1fr}
+.header>.wordmark{justify-self:start}
+.header>.button{justify-self:end;min-height:44px}
+.header nav{gap:32px}
+.header nav a{min-height:44px;display:inline-flex;align-items:center}
+.header nav a::after{bottom:5px}
+.button::before{content:none}
+.button,.button:hover{transform:none;box-shadow:none;transition:background-color .2s,border-color .2s,color .2s,box-shadow .2s}
+.button:hover{box-shadow:0 0 20px #d8efff18}
+.button:active{transform:none;box-shadow:inset 0 1px 3px #0002}
+.button:hover>span{transform:translate(2px,-2px)}
+.button:focus-visible,.menu-toggle:focus-visible,.journey-controls button:focus-visible{outline:2px solid #d4eaff;outline-offset:4px}
+.hero-line{letter-spacing:-.052em}
+.hero-description,.body-copy,.directions p,.journey-card-copy p{text-wrap:pretty}
+.hero-note::before{flex-shrink:0}
+.glass-intro{align-items:center;padding-block:46px 48px}
+.glass-intro .hero-actions{min-width:260px}
+.event-strip div{padding-left:18px;border-left:1px solid #bfd8eb26}
+.event-strip div>span{margin-bottom:7px}
+.section{padding-block:clamp(76px,7.5vw,112px)}
+.section-label{margin-bottom:36px;color:#b1bdc9}
+.intro-heading{align-items:start;gap:clamp(36px,6vw,86px)}
+.intro-heading h2{flex-shrink:0}
+.intro-heading .body-copy{max-width:470px}
+.directions{gap:18px;margin-top:42px}
+.directions>div{min-height:325px;padding:28px 26px;border-radius:14px}
+.direction-art{height:104px;margin-bottom:28px}
+.directions h3{font-size:1.28rem;letter-spacing:-.025em;line-height:1.4}
+.directions p{line-height:1.8;color:#bdc6d0;margin-top:12px}
+.funding .stat-value{min-height:1.1em;margin-bottom:14px;letter-spacing:-.06em}
+.funding h3{letter-spacing:-.015em}
+.faq-section{padding-block:100px}
+.faq-section>.section-label{top:100px}
+.faq-list summary{font-size:1rem;letter-spacing:-.01em;min-height:76px;gap:18px}
+.faq-list summary>span{display:grid;place-items:center;width:32px;height:32px;border:1px solid #c6deef30;border-radius:50%;font-size:1.15rem;color:#d0deea;transition:transform .25s,border-color .25s}
+.faq-list details[open] summary>span{border-color:#c6deef80}
+.faq-list details p{max-width:62ch;padding-bottom:28px}
+.footer-top .back-top{min-height:44px}
+.footer-bottom{letter-spacing:.02em}
+.dialog-close{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;font-size:1.65rem;line-height:1;padding:0;transition:background .2s}
+.dialog-close:hover{background:#c4def017}
+.dialog-done{width:100%;justify-content:space-between}
+.mobile-nav{max-height:calc(100dvh - var(--menu-height) - 24px);overflow-y:auto;overscroll-behavior:contain}
+.mobile-nav a[aria-current="location"]{color:#e1f1ff}
+.mobile-nav a[aria-current="location"]::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;margin:0 12px 3px 0;background:#d5edff;box-shadow:0 0 10px #d5edff80}
+.mobile-nav .mobile-registration{display:flex;justify-content:space-between;color:#d3e6f5;font-size:.94rem;padding-block:20px 8px}
+@media(min-width:761px) and (max-width:1100px){
+ .header{gap:16px}
+ .header nav{gap:20px}
+ .header .button-small{gap:12px;padding-inline:15px}
+ .intro-heading{gap:35px}
+ .intro-heading h2{max-width:45%;flex-shrink:1}
+ .directions>div{min-height:290px}
+}
+@media(max-width:760px){
+ .header{display:flex}
+ .header nav,.header>.button{display:none}
+ .mobile-nav{top:calc(var(--menu-height) + 8px);padding:12px 22px 16px;border-radius:16px}
+ .mobile-nav a{font-size:1.18rem;min-height:52px;letter-spacing:-.015em}
+ .hero{min-height:max(250px,calc(100svh - var(--menu-height) - 395px))}
+ .glass-intro{padding-block:30px 34px}
+ .glass-intro .hero-actions{min-width:0;grid-template-columns:1fr auto;gap:18px 16px;margin-top:24px}
+ .hero-actions .text-link{gap:10px;white-space:nowrap}
+ .hero-actions .button{justify-content:space-between;gap:12px}
+ .event-strip div{padding-left:12px}
+ .glass-content>.event-strip{padding-block:28px}
+ .section{padding-block:64px}
+ .section-label{margin-bottom:26px}
+ .intro-heading .body-copy{margin-top:22px}
+ .directions{gap:14px;margin-top:30px}
+ .directions>div{min-height:0;padding:26px}
+ .direction-art{height:95px;max-width:230px;margin:0 auto 24px}
+ .direction-art svg{height:95px}
+ .directions h3{font-size:1.4rem}
+ .directions p{margin-top:10px;font-size:.94rem}
+ .faq-section{padding-block:66px}
+ .faq-list summary{padding-block:21px;min-height:72px}
+ .faq-list details p{font-size:.94rem;line-height:1.85}
+ .funding .stat-value{font-size:clamp(2.5rem,11vw,3.1rem)}
+ .footer-top{gap:24px}
+ .footer-top p{flex-basis:100%}
+}
+@media(max-width:350px){
+ .glass-intro .hero-actions{grid-template-columns:1fr}
+ .hero-actions .text-link{justify-content:space-between;padding-block:8px}
+ .hero-actions .hero-note{font-size:.72rem}
+}
+@media(prefers-reduced-motion:reduce){.button:hover>span,.text-link:hover>span{transform:none}}
+/* A soft text shadow avoids dark outlines over illuminated areas. */
+.glass-content{text-shadow:0 2px 12px #0009}

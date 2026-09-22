@@ -10,7 +10,9 @@ Run `npm run dev`, then open http://127.0.0.1:4173. Or serve the `dist` folder u
 - `dist/polish.css`: floating navigation, editorial styling, illustrations, and motion.
 - `dist/timeline.css`: responsive timeline chapters and pinned horizontal layout.
 - `dist/app.js`: navigation, mobile menu, accessible registration dialog, and scroll-driven timeline.
+- `dist/teams.css` and `dist/teams.js`: the 60-person animation and replay, with no boxes around the teams.
 - `dist/assets/`: supplied wordmark, light symbol, and simplified mark.
+- `dist/assets/fonts/`: locally served variable fonts and their OFL licenses.
 
 Registration intentionally displays event status and does not collect or submit personal data. Replace this flow with an approved registration destination once available. The private proposal PDF is not included in the public website.
 
@@ -38,9 +40,13 @@ The timeline in `#experience` is explicitly placeholder content; edit the five `
 
 The timeline includes a skip link, a progress indicator, and a complete vertical list when JavaScript is unavailable, reduced motion is requested, or the viewport is too short for readable pinned content. Compact desktop windows (including 633px tall) keep the horizontal experience, with a more compact composition. Layout measurements refresh on resizing and font loading. No wheel or touch events are intercepted.
 
+Previous and next controls move to the actual chapter positions using native scrolling. The highlighted chapter follows the card nearest the center of the screen. At the end, normal downward scrolling continues to sponsorship. Reduced-motion and vertical layouts hide the horizontal controls.
+
 A fixed copy of the background, clipped to the menu height, covers scrolling content behind the transparent navigation. The mask never follows scroll events. The page remains in normal document flow so the timeline and fixed glass background keep their existing behavior.
 
 Navigation links highlight their destination immediately on activation. Intermediate sections do not change the highlight during a bookmark's smooth scroll. Position-based tracking resumes when scrolling continues, including wheel, touch, and keyboard interruptions. The browser's native hash navigation and history remain intact.
+
+The mobile menu includes registration information. Keyboard activation focuses the first link; Escape closes the menu and restores focus to its trigger. Selecting a section transfers focus to that section. The registration dialog returns focus to its opener, or to the menu trigger when opened on mobile. Registration links lead to the FAQ when JavaScript is unavailable.
 
 Funding goals count up from zero once per page load when each amount first enters the viewport. The full dollar value appears briefly before the compact $10K+ / $3K+ label returns. Leaving and re-entering the section does not restart the counters. Reduced-motion users and assistive technology receive the final amounts directly.
 
