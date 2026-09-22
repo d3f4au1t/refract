@@ -201,3 +201,23 @@ reducedMotion.addEventListener('change', requestJourneyMeasure);
 new ResizeObserver(requestJourneyMeasure).observe(journeyViewport);
 document.fonts.ready.then(requestJourneyMeasure);
 measureJourney();
+
+// Native scroll-driven clipping stays aligned with the menu on the compositor.
+// Keep an immediate scroll fallback for reduced motion and other browsers.
+const pageContent = document.querySelector('.page-content');
+const nativeContentClip = CSS.supports('animation-timeline', 'scroll(root block)');
+const updateContentClip = () => {
+  if (nativeContentClip && !reducedMotion.matches) return;
+  const clipTop = Math.max(0, header.offsetHeight - pageContent.getBoundingClientRect().top);
+  pageContent.style.setProperty('--content-clip-top', `${clipTop}px`);
+};
+const measureContentClip = () => {
+  pageContent.style.setProperty('--menu-height', `${header.offsetHeight}px`);
+  updateContentClip();
+};
+window.addEventListener('scroll', updateContentClip, { passive: true });
+window.addEventListener('resize', measureContentClip);
+window.addEventListener('pageshow', measureContentClip);
+reducedMotion.addEventListener('change', measureContentClip);
+new ResizeObserver(measureContentClip).observe(header);
+measureContentClip();

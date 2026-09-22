@@ -223,3 +223,18 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
   .motion-enabled .timeline::before{transform:none}
   .button:hover,.directions>div.is-visible:hover,.direction-art,.art-orbit,.art-intersections{transform:none!important}
 }
+
+/* Content ends at the transparent menu's lower edge, including on reverse scroll.
+   The wrapper never becomes a scroll container, so sticky timeline pinning and
+   the fixed logo/glass layers retain their original viewport geometry. */
+.page-content{--menu-height:86px;position:relative;z-index:1;display:flow-root;clip-path:inset(var(--content-clip-top,0px) 0 0)}
+@media(max-width:760px){.page-content{--menu-height:74px}}
+@supports(animation-timeline:scroll(root block)){
+  @media(prefers-reduced-motion:no-preference){
+    .page-content{animation:content-below-menu 1s linear both;animation-timeline:scroll(root block)}
+  }
+}
+@keyframes content-below-menu{
+  from{clip-path:inset(0px 0 0)}
+  to{clip-path:inset(calc(100% - 100dvh + var(--menu-height)) 0 0)}
+}
