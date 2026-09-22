@@ -108,17 +108,81 @@ document.querySelectorAll('.directions>div').forEach(card => {
   });
 });
 
-const navigationLinks = [...header.querySelectorAll('nav a')];
-const sectionObserver = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (!entry.isIntersecting) return;
-    navigationLinks.forEach(link => {
-      if (link.hash === `#${entry.target.id}`) link.setAttribute('aria-current', 'location');
-      else link.removeAttribute('aria-current');
+// A bookmark selects its destination immediately. Ignore intermediate sections
+// during native smooth scrolling; return to position tracking on the next scroll.
+const navigationGroups = [header.querySelector('nav'), menu].map(nav =>
+  [...nav.querySelectorAll('a')].map(link => ({ link, section: document.querySelector(link.hash) }))
+);
+const navigationLinks = navigationGroups.flat().map(item => item.link);
+let bookmarkTarget = null;
+let navigationFrame = 0;
+let navigationSettleTimer = 0;
+const setActiveBookmark = hash => {
+  navigationLinks.forEach(link => {
+    if (link.hash === hash) link.setAttribute('aria-current', 'location');
+    else link.removeAttribute('aria-current');
+  });
+};
+const updateNavigationFromScroll = () => {
+  navigationFrame = 0;
+  if (bookmarkTarget) return;
+  const readingLine = Math.max(header.offsetHeight + 24, window.innerHeight * .3);
+  navigationGroups.forEach(items => {
+    const current = items.filter(item => item.section.getBoundingClientRect().top <= readingLine).at(-1);
+    items.forEach(item => {
+      if (item === current) item.link.setAttribute('aria-current', 'location');
+      else item.link.removeAttribute('aria-current');
     });
   });
-}, { rootMargin: '-15% 0px -65% 0px' });
-navigationLinks.forEach(link => sectionObserver.observe(document.querySelector(link.hash)));
+};
+const releaseBookmarkScroll = () => {
+  clearTimeout(navigationSettleTimer);
+  bookmarkTarget = null;
+  // Keep the clicked highlight. Recalculate only when scrolling resumes.
+};
+const waitForBookmarkScroll = () => {
+  clearTimeout(navigationSettleTimer);
+  navigationSettleTimer = setTimeout(releaseBookmarkScroll, 180);
+};
+const selectBookmark = hash => {
+  const target = document.getElementById(hash.slice(1));
+  if (!target) return;
+  bookmarkTarget = target;
+  setActiveBookmark(hash);
+  waitForBookmarkScroll();
+};
+document.addEventListener('click', event => {
+  const link = event.target.closest('a[href^="#"]');
+  if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  selectBookmark(link.hash);
+});
+window.addEventListener('hashchange', () => selectBookmark(location.hash));
+window.addEventListener('scroll', () => {
+  if (bookmarkTarget) { waitForBookmarkScroll(); return; }
+  if (!navigationFrame) navigationFrame = requestAnimationFrame(updateNavigationFromScroll);
+}, { passive: true });
+document.addEventListener('scrollend', () => {
+  if (!bookmarkTarget) return;
+  const offset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+  const targetY = Math.min(document.documentElement.scrollHeight - window.innerHeight,
+    Math.max(0, bookmarkTarget.getBoundingClientRect().top + window.scrollY - offset));
+  // Ignore a late scrollend from an earlier click if another jump has started.
+  if (Math.abs(window.scrollY - targetY) < 2) releaseBookmarkScroll();
+});
+// A deliberate scroll gesture can interrupt a bookmark jump immediately.
+window.addEventListener('wheel', event => {
+  if (!event.ctrlKey && (event.deltaY || event.deltaX)) releaseBookmarkScroll();
+}, { passive: true });
+window.addEventListener('touchmove', releaseBookmarkScroll, { passive: true });
+document.addEventListener('keydown', event => {
+  if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+  if (event.target.closest('input,textarea,select,button,summary,[contenteditable="true"],[role="dialog"]')) return;
+  if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) releaseBookmarkScroll();
+});
+window.addEventListener('resize', updateNavigationFromScroll);
+window.addEventListener('pageshow', updateNavigationFromScroll);
+if (location.hash) selectBookmark(location.hash);
+else updateNavigationFromScroll();
 
 document.addEventListener('click', event => {
   if (!menu.hidden && !menu.contains(event.target) && !menuButton.contains(event.target)) closeMenu();
