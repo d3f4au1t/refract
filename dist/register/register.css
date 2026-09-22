@@ -1,19 +1,24 @@
-.registration-page{background:#030405;color:#edf1f5;min-height:100svh}
-.registration-header{position:relative;z-index:2;height:90px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 5%;border-bottom:1px solid #bed7ee12}
+/* Registration is a separate document with no homepage layout dependencies. */
+@font-face{font-family:Manrope;font-style:normal;font-weight:400 700;font-display:swap;src:url('/assets/fonts/manrope-latin.woff2') format('woff2')}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:300 600;font-display:swap;src:url('/assets/fonts/space-grotesk-latin.woff2') format('woff2')}
+:root{--sans:'Manrope',Arial,sans-serif;--display:'Space Grotesk',Arial,sans-serif;font-family:var(--sans);font-synthesis:none;color-scheme:dark;background:#030405;color:#edf1f5}
+*,*::before,*::after{box-sizing:border-box}
+body,h1,p{margin:0}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer}
+button,a,summary{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid #d5eafa;outline-offset:5px}
+::selection{background:#e4eef5;color:#10151b}
+.registration-page{background:radial-gradient(ellipse 650px 440px at 50% 0%,#b9dfff06,transparent),#030405;min-height:100svh}
+.registration-header{height:90px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 5%}
 .registration-brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:1rem;letter-spacing:.2em}
 .registration-symbol{display:block;width:42px;height:42px;background:#fff;mask:url('/assets/refract-symbol.png') center/contain no-repeat;mask-mode:luminance}
 .return-link{display:flex;align-items:center;gap:12px;font-size:.8rem;color:#aebac7;min-height:44px;transition:color .2s}
 .return-link:hover{color:#fff}
 .return-link>span{font-size:1.2rem}
-.registration-layout{display:grid;grid-template-columns:1.1fr 1fr;min-height:calc(100svh - 90px);max-width:1800px;margin:auto}
-.registration-art{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;min-height:700px;padding:55px 9% 65px;border-right:1px solid #bed7ee12;background:#000}
-.art-eyebrow{position:relative;z-index:1;font-size:.64rem;letter-spacing:.12em;color:#a8b9c9}
-.registration-art>img{position:absolute;top:4%;left:50%;width:128%;height:75%;object-fit:contain;max-width:none;transform:translateX(-50%);pointer-events:none;user-select:none}
-.art-caption{position:relative;z-index:1;padding-top:350px}
-.art-caption>p{font-family:var(--display);font-size:clamp(2.8rem,4.7vw,5rem);line-height:1.04;letter-spacing:-.055em;font-weight:300;margin-bottom:27px}
-.art-caption>span{font-size:.77rem;color:#a6b4c3}
-.registration-panel{display:grid;place-items:center;padding:60px 9%}
-.registration-inner{width:100%;max-width:410px}
+.registration-layout{min-height:calc(100svh - 90px);padding:48px 24px 80px}
+.registration-panel{width:100%;max-width:430px;margin:0 auto}
+.registration-inner{width:100%}
 .registration-steps{display:flex;gap:30px;list-style:none;padding:0;margin:0 0 46px;color:#718091;font-size:.7rem}
 .registration-steps li{padding-bottom:14px;border-bottom:1px solid #b5d6ed25;flex:1;display:flex;align-items:center;gap:9px;white-space:nowrap;transition:color .25s,border-color .25s}
 .registration-steps li>span{font-family:var(--display);font-variant-numeric:tabular-nums;font-size:.65rem}
@@ -43,7 +48,8 @@
 .registration-page button[aria-busy=true]>span:first-of-type::after{content:"";display:inline-block;width:11px;height:11px;border:1px solid currentColor;border-right-color:transparent;border-radius:50%;margin-left:10px;animation:spin .7s linear infinite}
 .registration-note{font-size:.72rem;line-height:1.8;color:#8796a5;margin-top:30px}
 .data-note{margin-top:12px;color:#8e9dad}
-.data-note summary{justify-content:flex-start;font-size:.7rem;min-height:36px;padding:7px 0;gap:8px}
+.data-note summary{display:flex;align-items:center;justify-content:flex-start;list-style:none;cursor:pointer;font-size:.7rem;line-height:1.5;min-height:36px;padding:7px 0;gap:8px}
+.data-note summary::-webkit-details-marker{display:none}
 .data-note summary::before{content:"+";font-size:1rem}
 .data-note[open] summary::before{content:"−"}
 .data-note p{font-size:.72rem;line-height:1.8;max-width:52ch;padding:6px 0;color:#a8b6c4}
@@ -75,7 +81,6 @@
 .registration-panel.is-complete .registration-note{display:none}
 @keyframes form-arrive{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:1000px){.registration-layout{grid-template-columns:1fr 1.1fr}.registration-panel{padding:45px 8%}.registration-art{padding-inline:12%}.art-caption>p{font-size:3.5rem}}
-@media(max-width:760px){.registration-header{height:76px;padding-inline:6%;border:0}.registration-brand{font-size:.85rem;gap:7px}.registration-symbol{width:35px;height:35px}.return-link{font-size:.7rem;gap:7px}.registration-layout{display:block;min-height:calc(100svh - 76px)}.registration-art{display:none}.registration-panel{padding:32px 7% 40px}.registration-inner{max-width:430px}.registration-steps{margin-bottom:35px;gap:24px}.registration-view h1{font-size:2.75rem}.registration-description{margin-block:18px 27px}.registration-note{margin-top:27px}}
-@media(max-width:350px){.return-link{font-size:.65rem}.registration-brand{font-size:.78rem}.registration-symbol{width:30px}.registration-panel{padding-inline:6%}.registration-view h1{font-size:2.45rem}.registration-steps{gap:20px}.resend-row{display:block}}
-@media(prefers-reduced-motion:reduce){.registration-view{animation:none}.registration-page button[aria-busy=true]>span:first-of-type::after{animation:none;border-style:dotted}}
+@media(max-width:760px){.registration-header{height:76px;padding-inline:6%}.registration-brand{font-size:.85rem;gap:7px}.registration-symbol{width:35px;height:35px}.return-link{font-size:.7rem;gap:7px}.registration-layout{min-height:calc(100svh - 76px);padding:32px 7% 40px}.registration-steps{margin-bottom:35px;gap:24px}.registration-view h1{font-size:2.75rem}.registration-description{margin-block:18px 27px}.registration-note{margin-top:27px}}
+@media(max-width:350px){.return-link{font-size:.65rem}.registration-brand{font-size:.78rem}.registration-symbol{width:30px}.registration-layout{padding-inline:6%}.registration-view h1{font-size:2.45rem}.registration-steps{gap:20px}.resend-row{display:block}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

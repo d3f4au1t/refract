@@ -17,7 +17,7 @@ Use Node 22.13+ (Node 24 recommended). Run `npm ci`, copy `.env.example` to `.en
 - `dist/assets/`: supplied wordmark, light symbol, and simplified mark.
 - `dist/assets/fonts/`: locally served variable fonts and their OFL licenses.
 
-Registration lives at `/register/`. Google sign-in or a Resend email code verifies the account, then the student supplies a name and confirms PRISMS eligibility. The backend saves one pending registration per verified account in SQLite. Sign-in methods remain unavailable until configured. The private proposal PDF is not included in the public website. See [AWS setup](deploy/README.md) for deployment and private credentials.
+Registration lives on its own page at `/register/`, with a centered form and a separate stylesheet. Register links use normal page navigation; they never insert a panel into the homepage or resize its logo, glass, or content. Google sign-in or a Resend email code verifies the account, then the student supplies a name and confirms PRISMS eligibility. The backend saves one pending registration per verified account in SQLite. Sign-in methods remain unavailable until configured. The private proposal PDF is not included in the public website. See [AWS setup](deploy/README.md) for deployment and private credentials.
 
 Original brand assets are retained from the user's supplied files:
 - `dist/assets/refract-wordmark.png`: earlier supplied wordmark retained as a source asset.
