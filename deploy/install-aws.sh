@@ -5,10 +5,10 @@ revision=${1:?Usage: install-aws.sh GIT_SHA HTTPS_ORIGIN}
 public_origin=${2:?An HTTPS origin is required}
 [[ "$revision" =~ ^[0-9a-f]{40}$ ]] || { echo 'Invalid revision' >&2; exit 1; }
 public_host=$(python3 - "$public_origin" <<'PY'
-import sys, urllib.parse
+import sys, urllib.parse, re
 u=urllib.parse.urlsplit(sys.argv[1])
-if u.scheme!='https' or not u.hostname or u.path or u.query or u.fragment or u.username or u.password or u.port:
-    raise SystemExit('Use an HTTPS origin without a path, port or credentials.')
+if u.scheme!='https' or not u.hostname or u.path or u.query or u.fragment or u.username or u.password or u.port != 8443 or not re.fullmatch(r"[A-Za-z0-9.-]+", u.hostname):
+    raise SystemExit('Use an HTTPS origin on port 8443 without a path or credentials.')
 print(u.hostname)
 PY
 )
@@ -36,8 +36,21 @@ GOOGLE_CLIENT_SECRET=
 ENV
   unset auth_secret
 fi
-# Keep credentials intact on subsequent deploys.
+# Update only the public origin; preserve provider keys, signing secret and data.
 chmod 600 /etc/refract/refract.env
+cp -a /etc/refract/refract.env "/etc/refract/env-before-$revision"
+python3 - "$public_origin" <<'PYORIGIN'
+from pathlib import Path
+import os, re, sys
+p = Path('/etc/refract/refract.env')
+lines = [line for line in p.read_text().splitlines() if not re.match(r'^\s*BETTER_AUTH_URL\s*=', line)]
+lines.append('BETTER_AUTH_URL=' + sys.argv[1])
+temporary = p.with_name('.refract.env.next')
+fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+with os.fdopen(fd, 'w') as stream:
+    stream.write('\n'.join(lines) + '\n')
+os.replace(temporary, p)
+PYORIGIN
 if [[ -f /var/lib/refract/refract.sqlite ]]; then
   sudo -u refract /usr/bin/node --input-type=module - "$revision" <<'JS'
 import { DatabaseSync } from 'node:sqlite';
@@ -61,6 +74,7 @@ for attempt in {1..20}; do
   sleep .5
 done
 if [[ "$healthy" != 1 ]]; then
+  cp -a "/etc/refract/env-before-$revision" /etc/refract/refract.env
   if [[ -n "$previous_app" ]]; then ln -sfn "$previous_app" /opt/refract/current; systemctl restart refract; else systemctl stop refract; fi
   echo 'Service failed health check; previous application restored.' >&2
   exit 1
@@ -77,11 +91,11 @@ server {
         default_type text/plain;
         try_files \$uri =404;
     }
-    location / { return 308 $public_origin\$request_uri; }
+    location / { return 444; }
 }
 server {
-    listen 443 ssl default_server;
-    listen [::]:443 ssl default_server;
+    listen 8443 ssl default_server;
+    listen [::]:8443 ssl default_server;
     server_name $public_host;
     ssl_certificate /etc/letsencrypt/live/refract-ip/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/refract-ip/privkey.pem;
@@ -106,7 +120,7 @@ server {
     location /api/ {
         proxy_pass http://127.0.0.1:3001;
         proxy_http_version 1.1;
-        proxy_set_header Host \$host;
+        proxy_set_header Host \$http_host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$remote_addr;
         proxy_set_header X-Forwarded-Proto https;
@@ -127,6 +141,8 @@ server {
 }
 NGINX
 if ! nginx -t; then
+  cp -a "/etc/refract/env-before-$revision" /etc/refract/refract.env
+  if [[ -n "$previous_app" ]]; then ln -sfn "$previous_app" /opt/refract/current; systemctl restart refract; else systemctl stop refract; fi
   cp -a "/etc/refract/nginx-before-$revision.conf" /etc/nginx/conf.d/refract.conf
   echo 'Nginx validation failed; configuration restored.' >&2
   exit 1
@@ -139,10 +155,12 @@ systemctl reload nginx
 # Nginx reloads gracefully: old workers can serve the first request after reload.
 public_healthy=0
 for attempt in {1..20}; do
-  if curl -fsS --resolve "$public_host:443:127.0.0.1" "$public_origin/api/health" >/dev/null 2>&1; then public_healthy=1; break; fi
+  if curl -fsS --resolve "$public_host:8443:127.0.0.1" "$public_origin/api/health" >/dev/null 2>&1; then public_healthy=1; break; fi
   sleep .5
 done
 if [[ "$public_healthy" != 1 ]]; then
+  cp -a "/etc/refract/env-before-$revision" /etc/refract/refract.env
+  if [[ -n "$previous_app" ]]; then ln -sfn "$previous_app" /opt/refract/current; systemctl restart refract; else systemctl stop refract; fi
   cp -a "/etc/refract/nginx-before-$revision.conf" /etc/nginx/conf.d/refract.conf
   if [[ -n "$previous_web" ]]; then ln -sfn "$previous_web" /var/www/refract/current; fi
   nginx -t && systemctl reload nginx
