@@ -4,6 +4,18 @@ The existing Nginx site serves `dist/`; `/api/` proxies to the Node service on `
 
 ## Private configuration
 
+The private setup helper avoids putting keys in chat, Git, shell history, or command arguments. Open an interactive SSH session, then run one of:
+
+```sh
+sudo python3 /opt/refract/current/deploy/configure-auth.py status
+sudo python3 /opt/refract/current/deploy/configure-auth.py resend
+sudo python3 /opt/refract/current/deploy/configure-auth.py google
+```
+
+Secret prompts are hidden. The helper writes the root-only environment file atomically, preserves the signing secret and database settings, restarts the application, checks its health, and restores the old configuration if startup fails. It does not send email or validate the credentials with Google/Resend; complete a real sign-in after setup. Google setup stays blocked until the site's HTTPS domain is configured. Run the helper's tests with `python3 -m unittest discover -s test -p '*_test.py'`.
+
+Create a [Resend sending key](https://resend.com/api-keys) after [verifying the sender domain](https://resend.com/domains). Create a Google **Web application** OAuth client in [Google Auth Platform](https://console.cloud.google.com/auth/clients), with the callback below and only basic profile/email scopes. If Google is in testing mode, add your test accounts before trying sign-in.
+
 Edit `/etc/refract/refract.env` on the server with `sudoedit`, then run `sudo systemctl restart refract`. This file is root-only and outside the release directory. Never commit it.
 
 - `BETTER_AUTH_URL`: the public HTTPS origin, without a path. Currently the server uses its IP address. Google OAuth needs a domain rather than a public IP.
