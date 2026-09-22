@@ -14,15 +14,15 @@ Run `npm run dev`, then open http://127.0.0.1:4173. Or serve the `dist` folder u
 
 Registration intentionally displays event status and does not collect or submit personal data. Replace this flow with an approved registration destination once available. The private proposal PDF is not included in the public website.
 
-Brand assets are copied unchanged from the user's supplied files:
+Original brand assets are retained from the user's supplied files:
 - `dist/assets/refract-wordmark.png`: earlier supplied wordmark retained as a source asset.
 - `dist/assets/refract-light.png`: earlier supplied symbol retained as a source asset.
 - `dist/assets/refract-symbol.png`: simplified mark for header and browser icon.
-The design uses deep black, silver, and subtle ice-blue accents, with rounded geometric type and a stationary light-filled background. CSS frames the source images without changing their pixels.
+The design uses deep black, silver, and subtle ice-blue accents, with rounded geometric type and a stationary light-filled background. The active backdrop is the AI-enhanced `refract-background-ai.png`; the original is retained alongside it.
 
 ## Fixed background and scrolling glass
 
-`dist/assets/refract-background.png` is the latest supplied background wordmark, copied unchanged. A fixed viewport layer keeps it stationary while the hero and lower information scroll. The lower sheet has a dark tint over a blurred, stationary copy of the full logo and light. Its rounded clipping surface moves with the content in the browser, so there is no separate mask edge to lag behind scrolling. It does not use scroll-driven image transforms.
+`dist/assets/refract-background.png` is the latest supplied background wordmark, copied unchanged. A fixed viewport layer keeps the active artwork stationary. The opening headline, description and registration controls sit inside the same scrolling glass panel as the lower information. Its permanent top border is transparent; the existing light-source calculation illuminates the edge only near the flare. The lower sheet has a dark tint over a blurred, stationary copy of the full logo and light. Its rounded clipping surface moves with the content in the browser, so there is no separate mask edge to lag behind scrolling. It does not use scroll-driven image transforms.
 
 The glass uses a deeper black tint and restrained brightness so the full logo and rays remain visible with softer glare. An opaque backing follows the rounded panel to prevent the exposed background leaking through its edge during scrolling. Smaller raster logos have been removed from the lower sections and footer to keep this surface unobstructed.
 
@@ -38,8 +38,12 @@ The timeline in `#experience` is explicitly placeholder content; edit the five `
 
 The timeline includes a skip link, a progress indicator, and a complete vertical list when JavaScript is unavailable, reduced motion is requested, or the viewport is too short for readable pinned content. Compact desktop windows (including 633px tall) keep the horizontal experience, with a more compact composition. Layout measurements refresh on resizing and font loading. No wheel or touch events are intercepted.
 
-The scrolling page is clipped at the transparent navigation's bottom edge, so content cannot overlap the menu. The clip follows native root scrolling where supported, with an immediate JavaScript fallback for other browsers and reduced-motion mode. The page remains in normal document flow so the timeline and fixed glass background keep their existing behavior.
+A fixed copy of the background, clipped to the menu height, covers scrolling content behind the transparent navigation. The mask never follows scroll events. The page remains in normal document flow so the timeline and fixed glass background keep their existing behavior.
 
 Navigation links highlight their destination immediately on activation. Intermediate sections do not change the highlight during a bookmark's smooth scroll. Position-based tracking resumes when scrolling continues, including wheel, touch, and keyboard interruptions. The browser's native hash navigation and history remain intact.
 
 Funding goals count up from zero once per page load when each amount first enters the viewport. The full dollar value appears briefly before the compact $10K+ / $3K+ label returns. Leaving and re-entering the section does not restart the counters. Reduced-motion users and assistive technology receive the final amounts directly.
+
+## Public copy
+
+Use plain descriptions of what students would do, concrete project examples and direct labels for navigation and registration. The proposal remains unapproved; keep the draft schedule and funding targets explicit without repeating long approval notices in every section. The opening light/glass interaction, team animation, funding counters and horizontal schedule are independent of these copy edits.

@@ -226,7 +226,7 @@ const updateJourney = () => {
   }
   const complete = progress >= .995;
   journey.classList.toggle('is-complete', complete);
-  journeyHint.textContent = complete ? 'Keep going down' : 'Scroll to explore';
+  journeyHint.textContent = complete ? 'Continue down' : 'Scroll to continue';
 };
 const requestJourneyUpdate = () => {
   if (!journeyFrame) journeyFrame = requestAnimationFrame(updateJourney);

@@ -253,16 +253,39 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
 .funding .count-value{display:inline-block}
 @media(max-width:760px){.funding [data-count-state="ready"] .count-value,.funding [data-count-state="counting"] .count-value{font-size:.65em}}
 
-/* Keep the moving intro readable over the fixed artwork. These feathered
-   backings belong only to the text blocks; the logo, glass, and light source
-   retain their existing layers, geometry, and scroll-driven lighting. */
-.hero-copy,.hero-actions{position:relative;isolation:isolate}
-.hero-copy::before,.hero-actions::before{content:"";position:absolute;inset:-26px -32px;z-index:-1;background:rgba(0,0,0,.9);border-radius:32px;filter:blur(22px);pointer-events:none}
-.hero-copy h1,.hero-description,.hero-actions>.text-link,.hero-note{text-shadow:0 2px 4px #000,0 0 16px #0009}
-.hero-copy .hero-line:first-child{color:#b4bfcb}
-.hero-description{color:#c4ccd5}
-.hero-actions>.text-link{color:#e0e5ec}
-.hero-note{color:#bac4cf}
+/* Opening information now belongs to the glass itself, not separate dark patches. */
+.hero{min-height:max(350px,calc(100svh - var(--menu-height) - 310px));padding-bottom:40px}
+.glass-content{border-top-color:transparent;box-shadow:none}
+.glass-intro{max-width:1680px;margin:0 auto;padding:44px 6% 50px;gap:60px}
+.glass-intro .hero-copy{max-width:680px}
+.glass-intro .hero-description{max-width:490px;color:#c4ccd5}
+.glass-intro .hero-note{color:#bac4cf;max-width:270px}
+.glass-intro .hero-actions>.text-link{color:#e0e5ec}
+.glass-intro .hero-line:first-child{color:#b4bfcb}
+.glass-intro .hero-actions>.button{text-shadow:none}
+/* Labels name actual sections; decorative metadata and repeated slogans are removed. */
+.section-label{font-family:var(--body);font-size:.75rem;letter-spacing:.035em}
+.section-label::before{width:20px}
+.event-strip div>span{font-family:var(--body);letter-spacing:.035em;font-size:.68rem}
+.hero-topline .eyebrow{font-size:.68rem;letter-spacing:.075em}
+.scroll-cue{font-size:.65rem;letter-spacing:.03em}
+.intro-heading .body-copy{max-width:410px}
+.directions>div{min-height:365px}
+.directions h3{font-size:1.25rem;min-height:0}
+.directions p{margin-bottom:0}
+.journey-status{border:0;border-radius:0;padding:0;font-size:.75rem;letter-spacing:.02em}
+.journey-intro-cue{letter-spacing:.035em}
+.journey-card-top{justify-content:flex-end}
+.formation-team-size{padding-top:0}
+.formation-heading{align-items:center}
 @media(max-width:760px){
-  .hero-copy::before,.hero-actions::before{inset:-20px -18px;filter:blur(16px)}
+ .hero{min-height:max(285px,calc(100svh - var(--menu-height) - 340px));padding-bottom:30px}
+ .glass-intro{display:block;margin:0 auto;padding:30px 6% 38px}
+ .glass-intro .hero-actions{margin-top:25px}
+ .glass-intro .hero-note{max-width:none}
+ .section-label{font-size:.68rem;letter-spacing:.03em}
+ .intro-heading .body-copy{max-width:none}
+ .directions>div{min-height:0}
+ .directions h3{font-size:1.55rem}
+ .formation-team-size{padding-top:0}
 }
