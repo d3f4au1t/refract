@@ -241,3 +241,14 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
 
 /* Use the supplied white mark as a luminance mask: black becomes transparent. */
 .header .brand-icon{display:block;flex-shrink:0;background:#fff;mix-blend-mode:normal;-webkit-mask-image:url('assets/refract-symbol.png');mask-image:url('assets/refract-symbol.png');-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;mask-mode:luminance}
+
+/* Keep the main invitation steady: a quiet highlight replaces the sweeping flash. */
+.hero-actions>.button,.hero-actions>.button:hover{background:#e8f0f5;border-color:#e8f0f5;transform:none;box-shadow:0 0 0 #d8efff00;transition:background-color .18s ease-out,border-color .18s ease-out,box-shadow .22s ease-out}
+.hero-actions>.button::before{content:none}
+.hero-actions>.button>span,.hero-actions>.button:hover>span{transform:none;transition:transform .2s ease-out}
+@media(hover:hover) and (pointer:fine){
+  .hero-actions>.button:hover{background:#f8fbfd;border-color:#fff;box-shadow:0 0 20px #d8efff1c}
+  .hero-actions>.button:hover>span{transform:translate(2px,-2px)}
+}
+.hero-actions>.button:active{background:#dce8f0;border-color:#dce8f0;box-shadow:inset 0 1px 2px #00000014;transform:none}
+@media(prefers-reduced-motion:reduce){.hero-actions>.button>span,.hero-actions>.button:hover>span{transform:none}}
