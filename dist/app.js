@@ -32,7 +32,6 @@ const updateLightOcclusion = () => {
   const crossing = Math.max(0, Math.min(1, (falloff - distance) / (falloff * 2)));
   const occlusion = crossing * crossing * (3 - 2 * crossing);
   const edgeGlow = Math.exp(-Math.pow(distance / (falloff * 1.7), 2));
-  backdrop.style.setProperty('--glass-edge', `${Math.max(0, glassEdge)}px`);
   backdrop.style.setProperty('--light-occlusion', occlusion.toFixed(4));
   glass.style.setProperty('--light-source-x', `${lightSourceX - glassBounds.left}px`);
   glass.style.setProperty('--edge-glow', edgeGlow.toFixed(4));
