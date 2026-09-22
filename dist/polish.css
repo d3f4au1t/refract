@@ -224,20 +224,14 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
   .button:hover,.directions>div.is-visible:hover,.direction-art,.art-orbit,.art-intersections{transform:none!important}
 }
 
-/* Content ends at the transparent menu's lower edge, including on reverse scroll.
-   The wrapper never becomes a scroll container, so sticky timeline pinning and
-   the fixed logo/glass layers retain their original viewport geometry. */
-.page-content{--menu-height:86px;position:relative;z-index:1;display:flow-root;clip-path:inset(var(--content-clip-top,0px) 0 0)}
-@media(max-width:760px){.page-content{--menu-height:74px}}
-@supports(animation-timeline:scroll(root block)){
-  @media(prefers-reduced-motion:no-preference){
-    .page-content{animation:content-below-menu 1s linear both;animation-timeline:scroll(root block)}
-  }
-}
-@keyframes content-below-menu{
-  from{clip-path:inset(0px 0 0)}
-  to{clip-path:inset(calc(100% - 100dvh + var(--menu-height)) 0 0)}
-}
+/* A viewport-fixed slice of the same backdrop occludes content under the menu.
+   Its edge never follows scroll events or a scroll-driven animation, so native
+   asynchronous scrolling cannot pull the content mask away from the header. */
+:root{--menu-height:86px}
+.page-content{position:relative;z-index:1;display:flow-root}
+.menu-backdrop{z-index:18;clip-path:inset(0 0 calc(100% - var(--menu-height)) 0);pointer-events:auto}
+.menu-backdrop>img{pointer-events:none}
+@media(max-width:760px){:root{--menu-height:74px}}
 
 /* Use the supplied white mark as a luminance mask: black becomes transparent. */
 .header .brand-icon{display:block;flex-shrink:0;background:#fff;mix-blend-mode:normal;-webkit-mask-image:url('assets/refract-symbol.png');mask-image:url('assets/refract-symbol.png');-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;mask-mode:luminance}

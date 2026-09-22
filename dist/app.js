@@ -34,7 +34,7 @@ const updateLightOcclusion = () => {
   const occlusion = 1 - transmission;
   const glowReach = falloff * (distance >= 0 ? 2.2 : .85);
   const edgeGlow = Math.exp(-Math.pow(distance / glowReach, 2));
-  backdrop.style.setProperty('--light-occlusion', occlusion.toFixed(4));
+  document.documentElement.style.setProperty('--light-occlusion', occlusion.toFixed(4));
   glass.style.setProperty('--light-source-x', `${lightSourceX - glassBounds.left}px`);
   glass.style.setProperty('--edge-glow', edgeGlow.toFixed(4));
   backdrop.classList.toggle('light-occluded', glassEdge <= lightSourceY);
@@ -268,25 +268,12 @@ new ResizeObserver(requestJourneyMeasure).observe(journeyViewport);
 document.fonts.ready.then(requestJourneyMeasure);
 measureJourney();
 
-// Native scroll-driven clipping stays aligned with the menu on the compositor.
-// Keep an immediate scroll fallback for reduced motion and other browsers.
-const pageContent = document.querySelector('.page-content');
-const nativeContentClip = CSS.supports('animation-timeline', 'scroll(root block)');
-const updateContentClip = () => {
-  if (nativeContentClip && !reducedMotion.matches) return;
-  const clipTop = Math.max(0, header.offsetHeight - pageContent.getBoundingClientRect().top);
-  pageContent.style.setProperty('--content-clip-top', `${clipTop}px`);
+// Only a header resize changes the fixed menu mask; scrolling never moves it.
+const measureMenu = () => {
+  document.documentElement.style.setProperty('--menu-height', `${header.offsetHeight}px`);
 };
-const measureContentClip = () => {
-  pageContent.style.setProperty('--menu-height', `${header.offsetHeight}px`);
-  updateContentClip();
-};
-window.addEventListener('scroll', updateContentClip, { passive: true });
-window.addEventListener('resize', measureContentClip);
-window.addEventListener('pageshow', measureContentClip);
-reducedMotion.addEventListener('change', measureContentClip);
-new ResizeObserver(measureContentClip).observe(header);
-measureContentClip();
+new ResizeObserver(measureMenu).observe(header);
+measureMenu();
 
 // Count each funding goal once, on its first visible appearance.
 // Static, accessible labels stay at the final value throughout the animation.
@@ -310,14 +297,14 @@ if ('IntersectionObserver' in window && !reducedMotion.matches) {
     if (counter.started) return;
     counter.started = true;
     counter.element.dataset.countState = 'counting';
-    const start = performance.now() + 100;
+    const start = performance.now() + 80;
     const tick = now => {
-      const progress = Math.min(1, Math.max(0, (now - start) / 820));
-      const eased = 1 - Math.pow(1 - progress, 3);
-      counter.value.textContent = `$${Math.floor(counter.target * eased)}`;
+      const progress = Math.min(1, Math.max(0, (now - start) / 600));
+      // Keep the final digits moving at the same pace as the rest of the count.
+      counter.value.textContent = `$${Math.floor(counter.target * progress)}`;
       if (progress < 1) counter.frame = requestAnimationFrame(tick);
       // Briefly show the full amount before compacting it to $10K+ / $3K+.
-      else counter.timer = setTimeout(() => finishCounter(counter), 120);
+      else counter.timer = setTimeout(() => finishCounter(counter), 60);
     };
     counter.frame = requestAnimationFrame(tick);
   };
