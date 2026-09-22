@@ -238,3 +238,6 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
   from{clip-path:inset(0px 0 0)}
   to{clip-path:inset(calc(100% - 100dvh + var(--menu-height)) 0 0)}
 }
+
+/* Use the supplied white mark as a luminance mask: black becomes transparent. */
+.header .brand-icon{display:block;flex-shrink:0;background:#fff;mix-blend-mode:normal;-webkit-mask-image:url('assets/refract-symbol.png');mask-image:url('assets/refract-symbol.png');-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;mask-mode:luminance}
