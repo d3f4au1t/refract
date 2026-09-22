@@ -252,3 +252,9 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
 }
 .hero-actions>.button:active{background:#dce8f0;border-color:#dce8f0;box-shadow:inset 0 1px 2px #00000014;transform:none}
 @media(prefers-reduced-motion:reduce){.hero-actions>.button>span,.hero-actions>.button:hover>span{transform:none}}
+
+/* Fixed-height number lines keep the count from moving surrounding content. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.funding [data-count-to]{white-space:nowrap;font-variant-numeric:tabular-nums}
+.funding .count-value{display:inline-block}
+@media(max-width:760px){.funding [data-count-state="ready"] .count-value,.funding [data-count-state="counting"] .count-value{font-size:.65em}}

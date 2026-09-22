@@ -287,3 +287,56 @@ window.addEventListener('pageshow', measureContentClip);
 reducedMotion.addEventListener('change', measureContentClip);
 new ResizeObserver(measureContentClip).observe(header);
 measureContentClip();
+
+// Count each funding goal once, on its first visible appearance.
+// Static, accessible labels stay at the final value throughout the animation.
+if ('IntersectionObserver' in window && !reducedMotion.matches) {
+  const fundingCounters = [...document.querySelectorAll('[data-count-to]')].map(element => ({
+    element,
+    value: element.querySelector('.count-value'),
+    target: Number(element.dataset.countTo),
+    label: element.querySelector('.count-value').textContent,
+    started: false,
+    frame: 0,
+    timer: 0
+  }));
+  const finishCounter = counter => {
+    cancelAnimationFrame(counter.frame);
+    clearTimeout(counter.timer);
+    counter.value.textContent = counter.label;
+    counter.element.dataset.countState = 'complete';
+  };
+  const startCounter = counter => {
+    if (counter.started) return;
+    counter.started = true;
+    counter.element.dataset.countState = 'counting';
+    const start = performance.now() + 100;
+    const tick = now => {
+      const progress = Math.min(1, Math.max(0, (now - start) / 820));
+      const eased = 1 - Math.pow(1 - progress, 3);
+      counter.value.textContent = `$${Math.floor(counter.target * eased)}`;
+      if (progress < 1) counter.frame = requestAnimationFrame(tick);
+      // Briefly show the full amount before compacting it to $10K+ / $3K+.
+      else counter.timer = setTimeout(() => finishCounter(counter), 120);
+    };
+    counter.frame = requestAnimationFrame(tick);
+  };
+  const fundingObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting || entry.intersectionRatio < .5) return;
+      const counter = fundingCounters.find(item => item.element === entry.target);
+      fundingObserver.unobserve(entry.target);
+      startCounter(counter);
+    });
+  }, { threshold: .5, rootMargin: '0px 0px -24px 0px' });
+  fundingCounters.forEach(counter => {
+    counter.value.textContent = '$0';
+    counter.element.dataset.countState = 'ready';
+    fundingObserver.observe(counter.element);
+  });
+  reducedMotion.addEventListener('change', event => {
+    if (!event.matches) return;
+    fundingObserver.disconnect();
+    fundingCounters.forEach(finishCounter);
+  });
+}

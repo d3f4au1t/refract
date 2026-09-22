@@ -41,3 +41,5 @@ The timeline includes a skip link, a progress indicator, and a complete vertical
 The scrolling page is clipped at the transparent navigation's bottom edge, so content cannot overlap the menu. The clip follows native root scrolling where supported, with an immediate JavaScript fallback for other browsers and reduced-motion mode. The page remains in normal document flow so the timeline and fixed glass background keep their existing behavior.
 
 Navigation links highlight their destination immediately on activation. Intermediate sections do not change the highlight during a bookmark's smooth scroll. Position-based tracking resumes when scrolling continues, including wheel, touch, and keyboard interruptions. The browser's native hash navigation and history remain intact.
+
+Funding goals count up from zero once per page load when each amount first enters the viewport. The full dollar value appears briefly before the compact $10K+ / $3K+ label returns. Leaving and re-entering the section does not restart the counters. Reduced-motion users and assistive technology receive the final amounts directly.
