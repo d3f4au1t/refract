@@ -252,3 +252,17 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
 .funding [data-count-to]{white-space:nowrap;font-variant-numeric:tabular-nums}
 .funding .count-value{display:inline-block}
 @media(max-width:760px){.funding [data-count-state="ready"] .count-value,.funding [data-count-state="counting"] .count-value{font-size:.65em}}
+
+/* Keep the moving intro readable over the fixed artwork. These feathered
+   backings belong only to the text blocks; the logo, glass, and light source
+   retain their existing layers, geometry, and scroll-driven lighting. */
+.hero-copy,.hero-actions{position:relative;isolation:isolate}
+.hero-copy::before,.hero-actions::before{content:"";position:absolute;inset:-26px -32px;z-index:-1;background:rgba(0,0,0,.9);border-radius:32px;filter:blur(22px);pointer-events:none}
+.hero-copy h1,.hero-description,.hero-actions>.text-link,.hero-note{text-shadow:0 2px 4px #000,0 0 16px #0009}
+.hero-copy .hero-line:first-child{color:#b4bfcb}
+.hero-description{color:#c4ccd5}
+.hero-actions>.text-link{color:#e0e5ec}
+.hero-note{color:#bac4cf}
+@media(max-width:760px){
+  .hero-copy::before,.hero-actions::before{inset:-20px -18px;filter:blur(16px)}
+}
