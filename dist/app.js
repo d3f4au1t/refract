@@ -1,0 +1,16 @@
+const header = document.querySelector('#header');
+const hero = document.querySelector('.hero');
+const menuButton = document.querySelector('.menu-toggle');
+const menu = document.querySelector('#mobile-nav');
+const dialog = document.querySelector('#registration-dialog');
+const closeMenu = () => { menu.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); menuButton.setAttribute('aria-label', 'Open navigation'); };
+new IntersectionObserver(([entry]) => header.classList.toggle('visible', !entry.isIntersecting), { rootMargin: '-90px 0px 0px 0px' }).observe(hero);
+menuButton.addEventListener('click', () => { const open = menu.hidden; menu.hidden = !open; menuButton.setAttribute('aria-expanded', String(open)); menuButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation'); });
+menu.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+document.querySelectorAll('[data-registration]').forEach(button => button.addEventListener('click', () => { closeMenu(); dialog.showModal(); document.body.classList.add('dialog-open'); }));
+const closeDialog = () => dialog.close();
+dialog.querySelector('.dialog-close').addEventListener('click', closeDialog);
+dialog.querySelector('.dialog-done').addEventListener('click', closeDialog);
+dialog.addEventListener('click', event => { const box = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)) closeDialog(); });
+dialog.addEventListener('close', () => document.body.classList.remove('dialog-open'));
+document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
