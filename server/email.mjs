@@ -13,7 +13,10 @@ export function createEmailSender(config) {
   if (!config.resendKey || !config.sender) return null;
   const resend = new Resend(config.resendKey);
   return async ({ email, otp }) => {
-    const { error } = await resend.emails.send({ from: config.sender, to: [email], ...verificationEmail(otp) });
-    if (error) throw new Error('Email provider rejected the verification message.');
+    const { data, error } = await resend.emails.send(
+      { from: config.sender, to: [email], ...verificationEmail(otp) },
+      { signal: AbortSignal.timeout(12000) },
+    );
+    if (error || !data?.id) throw new Error('Email provider did not confirm the verification message.');
   };
 }
