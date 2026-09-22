@@ -57,7 +57,7 @@ systemctl enable refract >/dev/null
 systemctl restart refract
 healthy=0
 for attempt in {1..20}; do
-  if curl -fsS http://127.0.0.1:3001/api/health >/dev/null; then healthy=1; break; fi
+  if curl -fsS http://127.0.0.1:3001/api/health >/dev/null 2>&1; then healthy=1; break; fi
   sleep .5
 done
 if [[ "$healthy" != 1 ]]; then
@@ -136,7 +136,13 @@ ln -sfn "$release/dist" "/var/www/refract/releases/$revision"
 ln -sfn "/var/www/refract/releases/$revision" /var/www/refract/.next
 mv -Tf /var/www/refract/.next /var/www/refract/current
 systemctl reload nginx
-if ! curl -fsS --resolve "$public_host:443:127.0.0.1" "$public_origin/api/health" >/dev/null; then
+# Nginx reloads gracefully: old workers can serve the first request after reload.
+public_healthy=0
+for attempt in {1..20}; do
+  if curl -fsS --resolve "$public_host:443:127.0.0.1" "$public_origin/api/health" >/dev/null 2>&1; then public_healthy=1; break; fi
+  sleep .5
+done
+if [[ "$public_healthy" != 1 ]]; then
   cp -a "/etc/refract/nginx-before-$revision.conf" /etc/nginx/conf.d/refract.conf
   if [[ -n "$previous_web" ]]; then ln -sfn "$previous_web" /var/www/refract/current; fi
   nginx -t && systemctl reload nginx
