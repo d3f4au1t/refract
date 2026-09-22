@@ -24,4 +24,4 @@ The design uses deep black, silver, and subtle ice-blue accents, with rounded ge
 
 The glass uses a lighter black tint and enhanced backdrop brightness so the logo’s white rays remain visible. Smaller raster logos have been removed from the lower sections and footer to keep this surface unobstructed.
 
-When the leading glass edge covers the central flare, the exposed light above it is immediately occluded. The light behind the glass remains visible and blurred. Scrolling back restores the exposed rays at the same boundary.
+As the leading glass edge crosses the central flare, the exposed light dims over a short distance while a soft bloom and luminous rim catch on the edge. A feathered CSS mask preserves only the self-lit “REFR” lettering; the dark “ACT” lettering disappears with the exposed light. The light behind the glass remains visible and blurred. The effect follows scroll position in both directions, restoring the rays and “ACT” as the source emerges.

@@ -21,11 +21,21 @@ const glass = document.querySelector('.glass-content');
 let lightFrame = 0;
 const updateLightOcclusion = () => {
   lightFrame = 0;
-  const glassEdge = glass.getBoundingClientRect().top;
+  const glassBounds = glass.getBoundingClientRect();
+  const glassEdge = glassBounds.top;
   const logoBounds = backgroundLogo.getBoundingClientRect();
   // The central flare sits at y=457 in the supplied 941px-tall artwork.
   const lightSourceY = logoBounds.top + logoBounds.height * (457 / 941);
+  const lightSourceX = logoBounds.left + logoBounds.width * (837 / 1672);
+  const distance = glassEdge - lightSourceY;
+  const falloff = Math.max(18, Math.min(32, logoBounds.width * .02));
+  const crossing = Math.max(0, Math.min(1, (falloff - distance) / (falloff * 2)));
+  const occlusion = crossing * crossing * (3 - 2 * crossing);
+  const edgeGlow = Math.exp(-Math.pow(distance / (falloff * 1.7), 2));
   backdrop.style.setProperty('--glass-edge', `${Math.max(0, glassEdge)}px`);
+  backdrop.style.setProperty('--light-occlusion', occlusion.toFixed(4));
+  glass.style.setProperty('--light-source-x', `${lightSourceX - glassBounds.left}px`);
+  glass.style.setProperty('--edge-glow', edgeGlow.toFixed(4));
   backdrop.classList.toggle('light-occluded', glassEdge <= lightSourceY);
 };
 const requestLightUpdate = () => {
