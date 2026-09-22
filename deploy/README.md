@@ -4,7 +4,7 @@ Refract is served only at `https://18.188.82.113:8443/`. Nginx listens on HTTPS 
 
 ## Public ports
 
-Allow inbound TCP 8443 in the instance security group (`sg-025e8c3d3af06c7c0`). Keep TCP 80 open for `/.well-known/acme-challenge/` so the IP certificate can renew. Every other HTTP request is closed without a response. Nothing listens on port 443, so the IP without `:8443` does not serve the site. Leave SSH access unchanged.
+Allow inbound TCP 8443 in the instance security group (`sg-025e8c3d3af06c7c0`). Keep TCP 80 open for `/.well-known/acme-challenge/` so the IP certificate can renew. Every other HTTP request is closed without a response. Nothing listens on port 443, so the IP without `:8443` does not serve the site. Plain HTTP on port 8443 redirects to HTTPS on that same port. Leave SSH access unchanged.
 
 The application origin is `https://18.188.82.113:8443`. Keep this port in browser links, authentication origins and any future OAuth callback URLs. The installer updates only `BETTER_AUTH_URL` and preserves private credentials and registration data.
 

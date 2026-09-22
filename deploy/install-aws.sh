@@ -102,6 +102,7 @@ server {
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_session_cache shared:RefractSSL:10m;
     ssl_session_timeout 1d;
+    error_page 497 =308 $public_origin\$request_uri;
     root /var/www/refract/current;
     index index.html;
     server_tokens off;
