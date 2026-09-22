@@ -53,7 +53,7 @@ updateLightOcclusion();
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const revealTargets = document.querySelectorAll([
   '.glass-content h2', '.glass-content .section-label', '.stats>div',
-  '.directions>div', '.timeline>div', '.funding>div',
+  '.directions>div', '.funding>div',
   '.glass-content .body-copy', '.manifesto-copy .statement', '.format-note',
   '.support-list', '.join-section>.button', '.join-section>.eyebrow',
   '.faq-list details', '.footer-top', '.footer-bottom'
@@ -61,7 +61,7 @@ const revealTargets = document.querySelectorAll([
 
 if (!reducedMotion.matches && 'IntersectionObserver' in window) {
   document.body.classList.add('motion-enabled');
-  document.querySelectorAll('.stats,.directions,.timeline,.funding,.faq-list').forEach(group => {
+  document.querySelectorAll('.stats,.directions,.funding,.faq-list').forEach(group => {
     [...group.children].forEach((item, index) => {
       item.style.setProperty('--enter-delay', `${Math.min(index * 95, 285)}ms`);
     });
@@ -77,11 +77,9 @@ if (!reducedMotion.matches && 'IntersectionObserver' in window) {
     target.classList.add('reveal-ready');
     revealObserver.observe(target);
   });
-  revealObserver.observe(document.querySelector('.timeline'));
   reducedMotion.addEventListener('change', event => {
     if (!event.matches) return;
     revealTargets.forEach(target => target.classList.add('is-visible'));
-    document.querySelector('.timeline').classList.add('is-visible');
     revealObserver.disconnect();
     document.body.classList.remove('motion-enabled');
   });
@@ -128,3 +126,71 @@ document.addEventListener('click', event => {
 window.matchMedia('(min-width: 761px)').addEventListener('change', event => {
   if (event.matches) closeMenu();
 });
+
+// Let native vertical scrolling carry the timeline sideways, then release it.
+// Only the chapter track moves; the page, glass, and background keep their geometry.
+const journey = document.querySelector('.journey-section');
+const journeyPin = journey.querySelector('.journey-pin');
+const journeyViewport = journey.querySelector('.journey-viewport');
+const journeyTrack = journey.querySelector('.journey-track');
+const journeyChapters = [...journey.querySelectorAll('.journey-chapter')];
+const journeyCount = journey.querySelector('.journey-count');
+const journeyHint = journey.querySelector('.journey-scroll-hint>span');
+let journeyTravel = 0;
+let journeyTop = 0;
+let journeyFrame = 0;
+let journeyMeasureFrame = 0;
+let currentChapter = -1;
+
+const updateJourney = () => {
+  journeyFrame = 0;
+  if (!journey.classList.contains('is-horizontal')) return;
+  const progress = Math.max(0, Math.min(1, (journeyTop - journey.getBoundingClientRect().top) / journeyTravel));
+  journeyTrack.style.transform = `translate3d(${-journeyTravel * progress}px,0,0)`;
+  journey.style.setProperty('--journey-progress', progress.toFixed(4));
+  const chapter = Math.min(journeyChapters.length - 1, Math.floor(progress * journeyChapters.length));
+  if (chapter !== currentChapter) {
+    currentChapter = chapter;
+    journeyCount.textContent = String(chapter + 1).padStart(2, '0');
+    journeyChapters.forEach((item, index) => {
+      item.dataset.current = String(index === chapter);
+      item.dataset.passed = String(index < chapter);
+    });
+  }
+  const complete = progress >= .995;
+  journey.classList.toggle('is-complete', complete);
+  journeyHint.textContent = complete ? 'Keep going down' : 'Scroll to explore';
+};
+const requestJourneyUpdate = () => {
+  if (!journeyFrame) journeyFrame = requestAnimationFrame(updateJourney);
+};
+const measureJourney = () => {
+  journeyMeasureFrame = 0;
+  // Small or zoomed viewports and reduced-motion readers get the full vertical list.
+  const horizontal = !reducedMotion.matches && window.innerHeight >= 650;
+  journey.classList.toggle('is-horizontal', horizontal);
+  journey.style.removeProperty('height');
+  journeyTrack.style.removeProperty('transform');
+  if (!horizontal) {
+    journeyTravel = 0;
+    journey.classList.remove('is-complete');
+    return;
+  }
+  journeyTop = header.offsetHeight;
+  journey.style.setProperty('--journey-top', `${journeyTop}px`);
+  journey.style.setProperty('--journey-height', `${window.innerHeight - journeyTop}px`);
+  journeyTravel = Math.max(1, journeyTrack.scrollWidth - journeyViewport.clientWidth);
+  journey.style.height = `${journeyPin.offsetHeight + journeyTravel}px`;
+  updateJourney();
+};
+const requestJourneyMeasure = () => {
+  if (!journeyMeasureFrame) journeyMeasureFrame = requestAnimationFrame(measureJourney);
+};
+window.addEventListener('scroll', requestJourneyUpdate, { passive: true });
+window.addEventListener('resize', requestJourneyMeasure);
+window.addEventListener('pageshow', requestJourneyMeasure);
+reducedMotion.addEventListener('change', requestJourneyMeasure);
+// Remeasure when font loading or a browser/sidebar resize changes card geometry.
+new ResizeObserver(requestJourneyMeasure).observe(journeyViewport);
+document.fonts.ready.then(requestJourneyMeasure);
+measureJourney();

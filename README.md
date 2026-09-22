@@ -8,7 +8,8 @@ Run `npm run dev`, then open http://127.0.0.1:4173. Or serve the `dist` folder u
 - `dist/index.html`: public copy, schedule, targets, FAQ, and registration information.
 - `dist/styles.css`: base layout, typography, and the fixed logo/glass treatment.
 - `dist/polish.css`: floating navigation, editorial styling, illustrations, and motion.
-- `dist/app.js`: navigation, mobile menu, and accessible registration dialog.
+- `dist/timeline.css`: responsive timeline chapters and pinned horizontal layout.
+- `dist/app.js`: navigation, mobile menu, accessible registration dialog, and scroll-driven timeline.
 - `dist/assets/`: supplied wordmark, light symbol, and simplified mark.
 
 Registration intentionally displays event status and does not collect or submit personal data. Replace this flow with an approved registration destination once available. The private proposal PDF is not included in the public website.
@@ -29,4 +30,10 @@ As the leading glass edge crosses the central flare, the exposed light holds nea
 
 ## Motion and interactions
 
-The transparent navigation stays visible while scrolling. Section entrances use staggered reveals; the project directions have drawn vector illustrations and pointer-responsive highlights, and the event sequence draws its connecting line as it enters view. Hero text, buttons, the mobile menu, FAQ answers, and the participation dialog have coordinated transitions. The main logo stays fixed. Reduced-motion preferences disable the decorative animations, and content remains visible when JavaScript is unavailable.
+The transparent navigation stays visible while scrolling. Section entrances use staggered reveals; the project directions have drawn vector illustrations and pointer-responsive highlights, and a five-chapter sample timeline moves horizontally with vertical scrolling before releasing back into the page. Hero text, buttons, the mobile menu, FAQ answers, and the participation dialog have coordinated transitions. The main logo stays fixed. Reduced-motion preferences disable the decorative animations, and content remains visible when JavaScript is unavailable.
+
+## Sample timeline
+
+The timeline in `#experience` is explicitly placeholder content; edit the five `.journey-chapter` items in `dist/index.html` to change it. Native scrolling drives a sticky viewport and horizontal track. Its travel distance is measured from the actual content width, so the last chapter clears the viewport edge before normal downward scrolling resumes. Scrolling upward reverses the sequence. The fixed logo and glass are not transformed.
+
+The timeline includes a skip link, a progress indicator, and a complete vertical list when JavaScript is unavailable, reduced motion is requested, or the viewport is too short for readable pinned content. Layout measurements refresh on resizing and font loading. No wheel or touch events are intercepted.
