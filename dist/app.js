@@ -29,9 +29,11 @@ const updateLightOcclusion = () => {
   const lightSourceX = logoBounds.left + logoBounds.width * (837 / 1672);
   const distance = glassEdge - lightSourceY;
   const falloff = Math.max(18, Math.min(32, logoBounds.width * .02));
-  const crossing = Math.max(0, Math.min(1, (falloff - distance) / (falloff * 2)));
-  const occlusion = crossing * crossing * (3 - 2 * crossing);
-  const edgeGlow = Math.exp(-Math.pow(distance / (falloff * 1.7), 2));
+  // Keep the beam bright until contact, then let its intensity roll off rapidly.
+  const transmission = 1 / (1 + Math.exp(-(distance + falloff * .24) / (falloff * .18)));
+  const occlusion = 1 - transmission;
+  const glowReach = falloff * (distance >= 0 ? 2.2 : .85);
+  const edgeGlow = Math.exp(-Math.pow(distance / glowReach, 2));
   backdrop.style.setProperty('--light-occlusion', occlusion.toFixed(4));
   glass.style.setProperty('--light-source-x', `${lightSourceX - glassBounds.left}px`);
   glass.style.setProperty('--edge-glow', edgeGlow.toFixed(4));
