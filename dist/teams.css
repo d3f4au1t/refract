@@ -9,12 +9,11 @@
 .formation-art{position:relative;width:100%;height:100%;display:grid;grid-template-columns:repeat(12,1fr);align-content:center;justify-items:center;gap:20px 0;padding:30px}
 .person{display:block;width:22px;height:32px;color:#c4d6e4}
 .person svg{display:block;width:100%;height:100%;fill:currentColor}
-.team-outline{display:none;position:absolute;inset:0 auto auto 0;border:1px solid #bfdaed33;border-radius:12px;background:linear-gradient(140deg,#accde70c,#03070b1a);opacity:0;transition:opacity .65s ease;pointer-events:none}
+.team-outline{display:none;position:absolute;inset:0 auto auto 0;pointer-events:none}
 .formation-stage.is-ready .formation-art{display:block;padding:0}
 .formation-stage.is-ready .person{position:absolute;left:0;top:0;transform:translate(var(--grid-x),var(--grid-y));transition:transform 1.1s cubic-bezier(.22,.68,0,1) var(--person-delay),color .7s ease}
 .formation-stage.is-ready .team-outline{display:block;transform:translate(var(--tile-x),var(--tile-y))}
 .team-formation[data-phase="teams"] .person{transform:translate(var(--team-x),var(--team-y));color:#e3f0fa}
-.team-formation[data-phase="teams"] .team-outline{opacity:1;transition-delay:.25s}
 .formation-stage.is-measuring .person{transition:none!important}
 .formation-controls{display:flex;justify-content:flex-end;margin-top:8px;min-height:44px}
 .formation-replay{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:#bacddb;cursor:pointer;font:inherit;transition:background .2s,color .2s}
@@ -30,6 +29,5 @@
  .formation-stage{--team-columns:2;--team-rows:8;--team-gap:10px;--team-height:59px;--grid-columns:10}
  .formation-art{grid-template-columns:repeat(10,1fr);gap:18px 0;padding:0}
  .person{width:17px;height:25px}
- .team-outline{border-radius:9px}
 }
-@media(prefers-reduced-motion:reduce){.formation-stage .person,.formation-stage .team-outline{transition:none!important}}
+@media(prefers-reduced-motion:reduce){.formation-stage .person{transition:none!important}}
