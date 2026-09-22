@@ -13,7 +13,15 @@ Run `npm run dev`, then open http://127.0.0.1:4173. Or serve the `dist` folder u
 Registration intentionally displays event status and does not collect or submit personal data. Replace this flow with an approved registration destination once available. The private proposal PDF is not included in the public website.
 
 Brand assets are copied unchanged from the user's supplied files:
-- `dist/assets/refract-wordmark.png`: luminous silver wordmark in the hero and footer.
-- `dist/assets/refract-light.png`: refracted-light symbol in the editorial and closing sections.
+- `dist/assets/refract-wordmark.png`: earlier supplied wordmark retained as a source asset.
+- `dist/assets/refract-light.png`: earlier supplied symbol retained as a source asset.
 - `dist/assets/refract-symbol.png`: simplified mark for header and browser icon.
-The design uses deep black, silver, and subtle ice-blue accents, with rounded geometric type and understated light motion. CSS frames the source images without changing their pixels.
+The design uses deep black, silver, and subtle ice-blue accents, with rounded geometric type and a stationary light-filled background. CSS frames the source images without changing their pixels.
+
+## Fixed background and scrolling glass
+
+`dist/assets/refract-background.png` is the latest supplied background wordmark, copied unchanged. A fixed viewport layer keeps it stationary while the hero and lower information scroll. The lower sheet retains a translucent black tint and uses backdrop blur, with a readable fallback when backdrop filtering is unavailable. It does not use scroll-driven image transforms.
+
+The glass uses a lighter black tint and enhanced backdrop brightness so the logo’s white rays remain visible. Smaller raster logos have been removed from the lower sections and footer to keep this surface unobstructed.
+
+When the leading glass edge covers the central flare, the exposed light above it is immediately occluded. The light behind the glass remains visible and blurred. Scrolling back restores the exposed rays at the same boundary.

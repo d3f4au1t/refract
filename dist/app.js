@@ -14,3 +14,26 @@ dialog.querySelector('.dialog-done').addEventListener('click', closeDialog);
 dialog.addEventListener('click', event => { const box = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)) closeDialog(); });
 dialog.addEventListener('close', () => document.body.classList.remove('dialog-open'));
 document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
+
+const backdrop = document.querySelector('.fixed-backdrop');
+const backgroundLogo = backdrop.querySelector('img');
+const glass = document.querySelector('.glass-content');
+let lightFrame = 0;
+const updateLightOcclusion = () => {
+  lightFrame = 0;
+  const glassEdge = glass.getBoundingClientRect().top;
+  const logoBounds = backgroundLogo.getBoundingClientRect();
+  // The central flare sits at y=457 in the supplied 941px-tall artwork.
+  const lightSourceY = logoBounds.top + logoBounds.height * (457 / 941);
+  backdrop.style.setProperty('--glass-edge', `${Math.max(0, glassEdge)}px`);
+  backdrop.classList.toggle('light-occluded', glassEdge <= lightSourceY);
+};
+const requestLightUpdate = () => {
+  if (!lightFrame) lightFrame = requestAnimationFrame(updateLightOcclusion);
+};
+window.addEventListener('scroll', requestLightUpdate, { passive: true });
+window.addEventListener('resize', requestLightUpdate);
+window.addEventListener('pageshow', requestLightUpdate);
+backgroundLogo.addEventListener('load', requestLightUpdate);
+new ResizeObserver(requestLightUpdate).observe(hero);
+updateLightOcclusion();
