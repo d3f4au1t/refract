@@ -2,7 +2,7 @@
   "name": "refract-prisms",
   "version": "1.0.0",
   "private": true,
-  "description": "Refract \u2014 a proposed PRISMS student hackathon",
+  "description": "Refract \u2014 a PRISMS student hackathon",
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env server/index.mjs",
     "start": "node --env-file-if-exists=.env server/index.mjs",

@@ -58,19 +58,19 @@
     clearTimeout(finishTimer);
     groupTimer = 0;
     formation.dataset.phase = 'teams';
-    status.textContent = '16 teams of 2–5';
+    status.textContent = 'Example: 16 teams of 2–5';
     replay.disabled = false;
   };
   const play = (fromReplay = false) => {
     clearTimeout(groupTimer);
     clearTimeout(finishTimer);
     formation.dataset.phase = 'grid';
-    status.textContent = '60 students';
+    status.textContent = 'Example: 60 students';
     replay.disabled = true;
     groupTimer = setTimeout(() => {
       groupTimer = 0;
       formation.dataset.phase = 'teams';
-      status.textContent = '16 teams of 2–5';
+      status.textContent = 'Example: 16 teams of 2–5';
       finishTimer = setTimeout(settle, 1600);
     }, fromReplay ? 1900 : 1250);
   };

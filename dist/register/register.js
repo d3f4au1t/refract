@@ -227,8 +227,8 @@
       notice.hidden = true;
       if (!config.googleEnabled || !config.emailEnabled) {
         notice.textContent = !config.googleEnabled && !config.emailEnabled
-          ? 'Registration is being set up. Please check back soon.'
-          : !config.googleEnabled ? 'Google sign-in is coming soon. You can register with email below.' : 'Email verification is coming soon. You can continue with Google.';
+          ? 'Sign-in is temporarily unavailable. Please try again shortly.'
+          : !config.googleEnabled ? 'Google sign-in is unavailable. You can register with email below.' : 'Email verification is unavailable. You can continue with Google.';
         notice.hidden = false;
         retryButton.textContent = 'Check again ↻';
         retryButton.hidden = false;

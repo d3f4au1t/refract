@@ -1,6 +1,6 @@
 # Refract — A PRISMS Student Hackathon
 
-Responsive event website with an AWS-ready registration backend, with a silver and ice-blue visual identity based on the supplied Refract brand assets. Content follows the September 2026 Refract proposal; approval, schedule, sponsorship, and registration remain explicitly unconfirmed.
+Responsive event website with an AWS-ready registration backend, with a silver and ice-blue visual identity based on the supplied Refract brand assets. Public copy presents Refract as an active event, with bracketed placeholders for dates, venue details, participant capacity, prizes and contacts.
 
 Use Node 22.13+ (Node 24 recommended). Run `npm ci`, copy `.env.example` to `.env`, and set `BETTER_AUTH_SECRET` with `openssl rand -hex 32`. Run `npm run dev`, then open http://localhost:3001. Run `npm run check` and `npm test` before deployment. The landing page is still static; registration needs the Node backend.
 
@@ -35,11 +35,11 @@ As the leading glass edge crosses the central flare, the exposed light holds nea
 
 ## Motion and interactions
 
-The transparent navigation stays visible while scrolling. Section entrances use staggered reveals; the project directions have drawn vector illustrations and pointer-responsive highlights, and a five-chapter sample timeline moves horizontally with vertical scrolling before releasing back into the page. Hero text, buttons, the mobile menu, FAQ answers, and registration views have coordinated transitions. The main logo stays fixed. Reduced-motion preferences disable the decorative animations, and content remains visible when JavaScript is unavailable.
+The transparent navigation stays visible while scrolling. Section entrances use staggered reveals; the project directions have drawn vector illustrations and pointer-responsive highlights, and a five-chapter event timeline moves horizontally with vertical scrolling before releasing back into the page. Hero text, buttons, the mobile menu, FAQ answers, and registration views have coordinated transitions. The main logo stays fixed. Reduced-motion preferences disable the decorative animations, and content remains visible when JavaScript is unavailable.
 
-## Sample timeline
+## Event timeline
 
-The timeline in `#experience` is explicitly placeholder content; edit the five `.journey-chapter` items in `dist/index.html` to change it. Native scrolling drives one sticky panorama containing the opening title and all five chapters. The title moves off to the left with the chapters, following the full-section horizontal movement on Trae’s site. Its travel distance is measured from the actual content width, so the last chapter clears the viewport edge before normal downward scrolling resumes. Scrolling upward reverses the sequence. The fixed logo and glass are not transformed.
+The timeline in `#experience` describes the event sequence, with bracketed placeholders for times and logistics; edit the five `.journey-chapter` items in `dist/index.html` to change it. Native scrolling drives one sticky panorama containing the opening title and all five chapters. The title moves off to the left with the chapters, following the full-section horizontal movement on Trae’s site. Its travel distance is measured from the actual content width, so the last chapter clears the viewport edge before normal downward scrolling resumes. Scrolling upward reverses the sequence. The fixed logo and glass are not transformed.
 
 The timeline includes a skip link, a progress indicator, and a complete vertical list when JavaScript is unavailable, reduced motion is requested, or the viewport is too short for readable pinned content. Compact desktop windows (including 633px tall) keep the horizontal experience, with a more compact composition. Layout measurements refresh on resizing and font loading. No wheel or touch events are intercepted.
 
@@ -55,4 +55,4 @@ Funding goals count up from zero once per page load when each amount first enter
 
 ## Public copy
 
-Use plain descriptions of what students would do, concrete project examples and direct labels for navigation and registration. The proposal remains unapproved; keep the draft schedule and funding targets explicit without repeating long approval notices in every section. The opening light/glass interaction, team animation, funding counters and horizontal schedule are independent of these copy edits.
+Describe Refract as an active event using direct participant instructions. Put unknown details in descriptive brackets, such as `[Start Date]`, `[Signup Deadline]`, `[Venue]` and `[Prize Pool]`. Keep the established fundraising goals labelled as targets, not money raised or prizes secured. The team animation illustrates example groups, not actual registrations. Keep provider availability and registration receipts accurate; a saved registration is not an approved place. The opening light/glass interaction, team animation, funding counters and horizontal schedule are independent of these copy edits.
