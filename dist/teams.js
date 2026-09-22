@@ -46,7 +46,7 @@
       person.style.setProperty('--grid-x', `${gridLeft + (gridIndex % gridColumns) * gridCellWidth + (gridCellWidth - iconWidth) / 2}px`);
       person.style.setProperty('--grid-y', `${gridTop + Math.floor(gridIndex / gridColumns) * gridCellHeight + (gridCellHeight - iconHeight) / 2}px`);
       person.style.setProperty('--team-x', `${(team % columns) * (tileWidth + gap) + (tileWidth - groupWidth) / 2 + member * (iconWidth + memberGap)}px`);
-      person.style.setProperty('--team-y', `${Math.floor(team / columns) * (tileHeight + gap) + (tileHeight - iconHeight) / 2 + 7}px`);
+      person.style.setProperty('--team-y', `${Math.floor(team / columns) * (tileHeight + gap) + (tileHeight - iconHeight) / 2}px`);
       person.style.setProperty('--person-delay', `${team * 18 + member * 28}ms`);
     });
     stage.classList.add('is-ready');
