@@ -50,9 +50,13 @@ const updateLightOcclusion = () => {
   const occlusion = 1 - transmission;
   const glowReach = falloff * (distance >= 0 ? 2.2 : .85);
   const edgeGlow = Math.exp(-Math.pow(distance / glowReach, 2));
+  // Let the rim go dark 24px before it reaches the fixed menu.
+  const rimProgress = Math.max(0, Math.min(1, (glassEdge - header.offsetHeight - 24) / 96));
+  const rimVisibility = rimProgress * rimProgress * (3 - 2 * rimProgress);
   document.documentElement.style.setProperty('--light-occlusion', occlusion.toFixed(4));
   glass.style.setProperty('--light-source-x', `${lightSourceX - glassBounds.left}px`);
   glass.style.setProperty('--edge-glow', edgeGlow.toFixed(4));
+  glass.style.setProperty('--glass-rim-visibility', rimVisibility.toFixed(4));
   backdrop.classList.toggle('light-occluded', glassEdge <= lightSourceY);
 };
 const requestLightUpdate = () => {
@@ -346,6 +350,7 @@ journeyNext.addEventListener('click', () => moveJourney(1));
 // Only a header resize changes the fixed menu mask; scrolling never moves it.
 const measureMenu = () => {
   document.documentElement.style.setProperty('--menu-height', `${header.offsetHeight}px`);
+  requestLightUpdate();
 };
 new ResizeObserver(measureMenu).observe(header);
 measureMenu();

@@ -259,11 +259,13 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
 /* The rim catches more light in the middle and fades toward the rounded sides. */
 .glass-content>.glass-surface::after{
  content:"";position:absolute;inset:0 0 auto;height:calc(var(--glass-radius) + 24px);pointer-events:none;
+ opacity:var(--glass-rim-visibility,1);
  border:1px solid rgb(209 228 243 / calc(.5 + var(--edge-glow,0)*.22));border-bottom:0;border-radius:inherit;
  -webkit-mask-image:linear-gradient(90deg,#0001,#0006 20%,#000 45%,#000 55%,#0006 80%,#0001),linear-gradient(#000 50%,transparent);
  mask-image:linear-gradient(90deg,#0001,#0006 20%,#000 45%,#000 55%,#0006 80%,#0001),linear-gradient(#000 50%,transparent);
  -webkit-mask-composite:source-in;mask-composite:intersect;
 }
+.glass-content::before,.glass-content::after{opacity:calc(var(--edge-glow,0)*var(--glass-rim-visibility,1))}
 .glass-intro{max-width:1680px;margin:0 auto;padding:44px 6% 50px;gap:60px}
 .glass-intro .hero-copy{max-width:680px}
 .glass-intro .hero-description{max-width:490px;color:#c4ccd5}
