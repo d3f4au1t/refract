@@ -2,6 +2,8 @@
 
 Responsive event website with an AWS-ready registration backend, with a silver and ice-blue visual identity based on the supplied Refract brand assets. Public copy presents Refract as an active event, with bracketed placeholders for dates, venue details, participant capacity, prizes and contacts.
 
+The [prelaunch audit](docs/prelaunch-audit.md) records feature coverage, launch blockers, performance results, and the final release checklist. The site remains a preview until provider setup and event information are complete.
+
 Use Node 22.13+ (Node 24 recommended). Run `npm ci`, copy `.env.example` to `.env`, and set `BETTER_AUTH_SECRET` with `openssl rand -hex 32`. Run `npm run dev`, then open http://localhost:3001. Run `npm run check` and `npm test` before deployment. The landing page is still static; registration needs the Node backend.
 
 ## Editing
