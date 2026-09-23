@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { once } from 'node:events';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createApp } from '../server/app.mjs';
 import { readConfig } from '../server/config.mjs';
 import { verificationEmail } from '../server/email.mjs';
@@ -26,7 +29,7 @@ async function fixture(t, options = {}) {
   };
   const send = email => request('/api/auth/email-otp/send-verification-otp', { email, type: 'sign-in' });
   const verify = (email, otp) => request('/api/auth/sign-in/email-otp', { email, otp });
-  return { ...service, request, send, verify, emails, config };
+  return { ...service, request, send, verify, emails, config, url: `http://127.0.0.1:${server.address().port}` };
 }
 
 test('unconfigured providers fail honestly and cannot create an account', async t => {
@@ -181,4 +184,95 @@ test('verified participants can only read and edit their own registration', asyn
   const unchanged = await f.request('/api/registration', undefined, first.cookie);
   assert.equal(unchanged.data.registration.name, 'First Student');
   assert.equal(unchanged.data.user.email, 'first@example.com');
+});
+
+test('simultaneous verification requests consume a code only once', async t => {
+  const f = await fixture(t);
+  await f.send('race@example.com');
+  const responses = await Promise.all(Array.from({ length: 8 }, () => f.verify('race@example.com', f.emails[0].otp)));
+  assert.equal(responses.filter(r => r.status === 200).length, 1);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM session').get().count, 1);
+});
+
+test('expired sessions and unverified accounts cannot read or change a registration', async t => {
+  const f = await fixture(t);
+  await f.send('session@example.com');
+  const { cookie } = await f.verify('session@example.com', f.emails[0].otp);
+  await f.request('/api/registration', { name: 'Session Student', student: true }, cookie);
+  f.db.prepare('UPDATE user SET emailVerified = 0').run();
+  assert.equal((await f.request('/api/registration', undefined, cookie)).status, 403);
+  assert.equal((await f.request('/api/registration', { name: 'Not Allowed', student: true }, cookie)).status, 403);
+  f.db.prepare('UPDATE user SET emailVerified = 1').run();
+  f.db.prepare('UPDATE session SET expiresAt = ?').run(Date.now() - 1000);
+  assert.equal((await f.request('/api/registration', undefined, cookie)).status, 401);
+  assert.equal((await f.request('/api/registration', { name: 'Not Allowed', student: true }, cookie)).status, 401);
+  assert.equal(f.db.prepare('SELECT name FROM registrations').get().name, 'Session Student');
+});
+
+test('parallel registration submissions keep one receipt and do not accept forged status', async t => {
+  const f = await fixture(t);
+  await f.send('duplicate@example.com');
+  const { cookie } = await f.verify('duplicate@example.com', f.emails[0].otp);
+  const results = await Promise.all(Array.from({ length: 8 }, () => f.request('/api/registration', {
+    name: 'Duplicate Student', student: true, status: 'approved', reference: 'FORGED',
+  }, cookie)));
+  assert.ok(results.every(r => r.status === 200 && r.data.registration.status === 'pending'));
+  assert.equal(new Set(results.map(r => r.data.registration.reference)).size, 1);
+  assert.notEqual(results[0].data.registration.reference, 'FORGED');
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM registrations').get().count, 1);
+});
+
+test('invalid details, malformed JSON, and oversized requests fail without saving data', async t => {
+  const f = await fixture(t);
+  await f.send('validation@example.com');
+  const { cookie } = await f.verify('validation@example.com', f.emails[0].otp);
+  for (const name of ['', '  ', 'A', 'x'.repeat(101), 'Invalid\u0000Name', null, { name: 'object' }]) {
+    assert.equal((await f.request('/api/registration', { name, student: true }, cookie)).status, 400);
+  }
+  for (const student of [false, 'true', 1, null]) {
+    assert.equal((await f.request('/api/registration', { name: 'Valid Name', student }, cookie)).status, 400);
+  }
+  const headers = { origin: f.config.baseURL, cookie, 'content-type': 'application/json' };
+  assert.equal((await fetch(`${f.url}/api/registration`, { method: 'POST', headers, body: '{"name":' })).status, 400);
+  assert.equal((await fetch(`${f.url}/api/registration`, { method: 'POST', headers, body: JSON.stringify({ name: 'x'.repeat(9000), student: true }) })).status, 413);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM registrations').get().count, 0);
+});
+
+test('IP throttling limits sends across different addresses', async t => {
+  const f = await fixture(t);
+  for (let i = 0; i < 40; i++) assert.equal((await f.send(`limit-${i}@example.com`)).status, 200);
+  const blocked = await f.send('over-limit@example.com');
+  assert.equal(blocked.status, 429);
+  assert.ok(Number(blocked.headers.get('x-retry-after')) > 0);
+  assert.equal(f.emails.length, 40);
+});
+
+test('cross-origin writes cannot consume a valid code or sign out a session', async t => {
+  const f = await fixture(t);
+  await f.send('origin@example.com');
+  const body = { email: 'origin@example.com', otp: f.emails[0].otp };
+  assert.equal((await f.request('/api/auth/sign-in/email-otp', body, null, 'https://untrusted.example')).status, 403);
+  const verified = await f.verify(body.email, body.otp);
+  assert.equal(verified.status, 200);
+  assert.equal((await f.request('/api/auth/sign-out', {}, verified.cookie, 'https://untrusted.example')).status, 403);
+  assert.equal((await f.request('/api/registration', undefined, verified.cookie)).status, 200);
+});
+
+test('a SQLite backup restores registrations and sessions in a fresh service', async t => {
+  const directory = mkdtempSync(join(tmpdir(), 'refract-restore-'));
+  const f = await fixture(t);
+  await f.send('restore@example.com');
+  const { cookie } = await f.verify('restore@example.com', f.emails[0].otp);
+  const saved = await f.request('/api/registration', { name: 'Restore Student', student: true }, cookie);
+  const databasePath = join(directory, 'restored.sqlite');
+  f.db.prepare('VACUUM INTO ?').run(databasePath);
+  const restored = await createApp({ ...f.config, databasePath }, { sendEmail: null });
+  try {
+    const session = await restored.auth.api.getSession({ headers: new Headers({ cookie }) });
+    assert.equal(session.user.email, 'restore@example.com');
+    const registration = restored.db.prepare('SELECT reference, name, status FROM registrations WHERE user_id = ?').get(session.user.id);
+    assert.equal(registration.reference, saved.data.registration.reference);
+    assert.equal(registration.name, 'Restore Student');
+    assert.equal(registration.status, 'pending');
+  } finally { restored.close(); rmSync(directory, { recursive: true, force: true }); }
 });
