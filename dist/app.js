@@ -45,19 +45,15 @@ const updateLightOcclusion = () => {
   const lightSourceX = logoBounds.left + logoBounds.width * (837 / 1672);
   const distance = glassEdge - lightSourceY;
   const falloff = Math.max(18, Math.min(32, logoBounds.width * .02));
-  // Keep full brightness until the glass covers almost all of the bright core.
-  // Measure the core in artwork pixels so contact scales with the logo.
-  const sourceRadius = logoBounds.width * (14 / 1672);
-  const fadeDistance = Math.max(3, Math.min(10, logoBounds.width * (8 / 1672)));
-  const coverage = Math.max(0, Math.min(1, (-distance - sourceRadius * .9) / fadeDistance));
-  // A bounded, eased fade has no dimming tail before the source is covered.
-  const occlusion = coverage ** 3 * (coverage * (coverage * 6 - 15) + 10);
+  // Keep the beam bright until contact, then let its intensity roll off rapidly.
+  const transmission = 1 / (1 + Math.exp(-(distance + falloff * .24) / (falloff * .18)));
+  const occlusion = 1 - transmission;
   const glowReach = falloff * (distance >= 0 ? 2.2 : .85);
   const edgeGlow = Math.exp(-Math.pow(distance / glowReach, 2));
   document.documentElement.style.setProperty('--light-occlusion', occlusion.toFixed(4));
   glass.style.setProperty('--light-source-x', `${lightSourceX - glassBounds.left}px`);
   glass.style.setProperty('--edge-glow', edgeGlow.toFixed(4));
-  backdrop.classList.toggle('light-occluded', occlusion === 1);
+  backdrop.classList.toggle('light-occluded', glassEdge <= lightSourceY);
 };
 const requestLightUpdate = () => {
   if (!lightFrame) lightFrame = requestAnimationFrame(updateLightOcclusion);
