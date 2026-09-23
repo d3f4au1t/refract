@@ -1,6 +1,6 @@
 (() => {
   const $ = selector => document.querySelector(selector);
-  const views = ['start', 'verify', 'details', 'complete'];
+  const views = ['start', 'verify', 'details', 'complete', 'recover'];
   const errorBox = $('#form-error');
   const notice = $('#service-notice');
   const retryButton = $('#retry-connection');
@@ -23,6 +23,8 @@
     EMAIL_DELIVERY_FAILED: 'We couldn’t send your code. Please try again in a minute.',
     SIGN_IN_REQUIRED: 'Your session has ended. Please verify your email again.',
     EMAIL_NOT_VERIFIED: 'Please verify your email before registering.',
+    INVALID_EMAIL: 'Enter a valid email address, such as you@example.com.',
+    INVALID_DETAILS: 'Enter your name and confirm that you are a current PRISMS student.',
   };
   const readPending = () => {
     try { return JSON.parse(sessionStorage.getItem(storageKey)); } catch { return null; }
@@ -104,6 +106,8 @@
     try { await action(); }
     catch (error) {
       if (error.code === 'SIGN_IN_REQUIRED') { clearPending(); showView('start'); }
+      if (error.code === 'INVALID_EMAIL') $('#email').setAttribute('aria-invalid', 'true');
+      if (error.code === 'INVALID_DETAILS') $('#full-name').setAttribute('aria-invalid', 'true');
       if (['INVALID_OTP', 'OTP_EXPIRED', 'TOO_MANY_ATTEMPTS'].includes(error.code)) $('#code').setAttribute('aria-invalid', 'true');
       if (['OTP_EXPIRED', 'TOO_MANY_ATTEMPTS'].includes(error.code)) { expiresAt = Date.now(); savePending(); }
       if (error.code === 'EMAIL_COOLDOWN' && pendingEmail && error.retryAfter) {
@@ -166,10 +170,27 @@
   $('#code-form').addEventListener('submit', event => {
     event.preventDefault();
     busy(event.currentTarget.querySelector('button'), async () => {
-      await api('/api/auth/sign-in/email-otp', { email: pendingEmail, otp: $('#code').value.trim() });
-      showAccount(await api('/api/registration'));
+      try {
+        await api('/api/auth/sign-in/email-otp', { email: pendingEmail, otp: $('#code').value.trim() });
+      } catch (error) {
+        // A lost response may still have established a session. Check it before
+        // asking the visitor to submit a potentially consumed code again.
+        if (!error.status) showView('recover');
+        throw error;
+      }
+      clearPending();
+      try { showAccount(await api('/api/registration')); }
+      catch (error) { showView('recover'); throw error; }
     }, 'Verifying your email…');
   });
+  $('#resume-registration').addEventListener('click', event => busy(event.currentTarget, async () => {
+    try { showAccount(await api('/api/registration')); }
+    catch (error) {
+      if (error.status !== 401) throw error;
+      if (pendingEmail) showVerification();
+      else showView('start');
+    }
+  }, 'Loading your registration…'));
   const cleanCode = value => value.normalize('NFKC').replace(/\D/g, '').slice(0, 6);
   $('#code').addEventListener('input', event => {
     event.target.value = cleanCode(event.target.value);
@@ -202,10 +223,22 @@
     if (url.protocol !== 'https:' || url.hostname !== 'accounts.google.com') throw new Error('Couldn’t open Google sign-in. Please try again.');
     window.location.assign(url.href);
   }, 'Opening Google sign-in…'));
+  const fullName = $('#full-name');
+  fullName.addEventListener('input', () => {
+    fullName.setCustomValidity('');
+    fullName.removeAttribute('aria-invalid');
+  });
   $('#details-form').addEventListener('submit', event => {
     event.preventDefault();
+    const name = fullName.value.trim().replace(/\s+/g, ' ');
+    if (name.length < 2 || name.length > 100 || /[\u0000-\u001f\u007f]/.test(name)) {
+      fullName.setCustomValidity('Please enter your name (at least two characters).');
+      fullName.setAttribute('aria-invalid', 'true');
+      fullName.reportValidity();
+      return;
+    }
     busy(event.currentTarget.querySelector('button'), async () => {
-      showAccount(await api('/api/registration', { name: $('#full-name').value.trim(), student: $('#prisms-student').checked }));
+      showAccount(await api('/api/registration', { name, student: $('#prisms-student').checked }));
     }, 'Saving your registration…');
   });
   $('#edit-details').addEventListener('click', () => { clearError(); showView('details'); });

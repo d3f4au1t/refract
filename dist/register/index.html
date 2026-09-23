@@ -11,7 +11,7 @@
   <link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/register/register.css?v=standalone-1">
-  <script src="/register/register.js?v=event-copy-1" defer></script>
+  <script src="/register/register.js?v=registration-recovery-1" defer></script>
 </head>
 <body class="registration-page">
   <header class="registration-header">
@@ -53,6 +53,12 @@
           </form>
           <div class="resend-row"><span>No email? Check your spam folder.</span><button id="resend-code" class="quiet-button" type="button">Resend code</button></div>
           <p id="verification-status" class="field-help" role="status"></p>
+        </div>
+        <div id="recover-view" class="registration-view" hidden>
+          <h1 id="recover-title" tabindex="-1">Continue<br>registration.</h1>
+          <p class="registration-description">We couldn’t load the next step. Try again to pick up where you left off.</p>
+          <button id="resume-registration" class="registration-submit" type="button"><span>Try again</span><span aria-hidden="true">→</span></button>
+          <button class="quiet-button sign-out" type="button">Use a different account</button>
         </div>
         <div id="details-view" class="registration-view" hidden>
           <p class="verified-label"><span aria-hidden="true">✓</span> Email verified</p>

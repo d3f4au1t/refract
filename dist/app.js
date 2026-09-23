@@ -303,8 +303,13 @@ const measureJourney = () => {
   journeyViewport.style.setProperty('--journey-rail-y', `${firstNode.top + firstNode.height / 2 - viewportBounds.top}px`);
   journeyTrack.style.setProperty('--journey-rail-start', `${journeyRailStart}px`);
   journeyTrack.style.setProperty('--journey-rail-length', `${journeyRailLength}px`);
-  journeyStops = [...new Set([0, ...journeyNodeOffsets.map(center =>
-    Math.max(0, Math.min(journeyTravel, journeyTrackStart + center - journeyViewportCenter))), journeyTravel])];
+  // Arrow navigation brings the whole card into view, especially on phones.
+  // The progress light remains centered independently of these reading stops.
+  journeyStops = [...new Set([0, ...journeyChapters.map(chapter => {
+    const card = chapter.querySelector('.journey-card').getBoundingClientRect();
+    const cardCenter = card.left + card.width / 2 - viewportBounds.left;
+    return Math.max(0, Math.min(journeyTravel, cardCenter - journeyViewportCenter));
+  }), journeyTravel])];
   const cardsOverflow = [...journey.querySelectorAll('.journey-card')].some(card => card.scrollHeight > card.clientHeight + 1);
   if (cardsOverflow || journeyIntro.scrollHeight > journeyViewport.clientHeight + 1) {
     journey.classList.remove('is-horizontal', 'is-complete');
