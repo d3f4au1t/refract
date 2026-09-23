@@ -157,6 +157,13 @@
     event.preventDefault();
     if (!config.emailEnabled) return;
     const email = $('#email').value.trim().toLowerCase();
+    // Returning from “Use another email” should reopen a valid code rather than
+    // request another message and strand the visitor behind the send cooldown.
+    if (email === pendingEmail && expiresAt > Date.now()) {
+      clearError();
+      showVerification();
+      return;
+    }
     busy(event.currentTarget.querySelector('button'), async () => {
       await api('/api/auth/email-otp/send-verification-otp', { email, type: 'sign-in' });
       pendingEmail = email;
@@ -215,7 +222,9 @@
   }, 'Sending a new verification code…'));
   $('#change-email').addEventListener('click', () => {
     if (requestInFlight) return;
-    clearPending(); clearError(); showView('start', false); updateControls(); $('#email').focus();
+    clearInterval(resendTimer);
+    $('#code').value = '';
+    clearError(); showView('start', false); updateControls(); $('#email').focus();
   });
   $('#google-sign-in').addEventListener('click', event => busy(event.currentTarget, async () => {
     const data = await api('/api/auth/sign-in/social', { provider: 'google', callbackURL: '/register/', errorCallbackURL: '/register/?error=google', disableRedirect: true });
