@@ -45,8 +45,8 @@ const updateLightOcclusion = () => {
   const lightSourceX = logoBounds.left + logoBounds.width * (837 / 1672);
   const distance = glassEdge - lightSourceY;
   const falloff = Math.max(18, Math.min(32, logoBounds.width * .02));
-  // Keep the beam bright until contact, then let its intensity roll off rapidly.
-  const transmission = 1 / (1 + Math.exp(-(distance + falloff * .24) / (falloff * .18)));
+  // Keep the same smooth fade, shifted a few pixels further behind the glass.
+  const transmission = 1 / (1 + Math.exp(-(distance + falloff * .36) / (falloff * .18)));
   const occlusion = 1 - transmission;
   const glowReach = falloff * (distance >= 0 ? 2.2 : .85);
   const edgeGlow = Math.exp(-Math.pow(distance / glowReach, 2));
