@@ -15,7 +15,7 @@
 .journey-track{padding:0;margin:0;list-style:none;display:grid;gap:24px}
 .journey-chapter{position:relative;min-width:0;padding-top:28px}
 .journey-chapter::before{content:"";position:absolute;top:5px;left:0;right:0;height:1px;background:#bcdaf046}
-.journey-chapter:last-child::before{right:0}
+.journey-chapter:last-child::before{content:none}
 .journey-node{position:absolute;left:1px;top:0;width:11px;height:11px;border-radius:50%;background:#1b2730;border:1px solid #cee7f7;box-shadow:0 0 16px #b9ddff33;z-index:1}
 .journey-card{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:24px;min-height:355px;height:100%;padding:30px;border:1px solid #b4d3ed36;border-radius:20px;background:linear-gradient(145deg,#c1e2fa12,#0a10182b 68%);overflow:hidden;transition:border-color .45s,background .45s}
 .journey-card::before{content:"";position:absolute;pointer-events:none;inset:0;background:radial-gradient(ellipse at 0 0,#bbdcff19,transparent 65%);opacity:0;transition:opacity .5s}
@@ -43,7 +43,6 @@
 .is-horizontal .journey-chapter{flex:0 0 clamp(330px,34vw,490px);width:clamp(330px,34vw,490px);height:100%}
 .is-horizontal .journey-card{min-height:0}
 .is-horizontal .journey-chapter::before{right:-28px}
-.is-horizontal .journey-chapter:last-child::before{right:0}
 .is-horizontal .journey-chapter[data-current="true"] .journey-card{border-color:#ceeaff8c;background:linear-gradient(145deg,#c1e2fa1c,#0a10183d 68%)}
 .is-horizontal .journey-chapter[data-current="true"] .journey-card::before{opacity:1}
 .is-horizontal .journey-chapter[data-current="true"] .journey-number{color:#d7eaff7a}

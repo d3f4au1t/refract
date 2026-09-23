@@ -249,7 +249,8 @@ const updateJourney = () => {
   const beamX = journeyViewportCenter - journeyTrackStart + journeyTravel * progress;
   const railProgress = Math.max(0, Math.min(1, (beamX - journeyRailStart) / Math.max(1, journeyRailLength)));
   journeyTrack.style.setProperty('--journey-rail-progress', railProgress.toFixed(6));
-  journeyViewport.style.setProperty('--journey-beam-visible', beamX >= journeyRailStart - .5 ? '1' : '0');
+  const beamOnRail = beamX >= journeyRailStart - .5 && beamX <= journeyRailStart + journeyRailLength + .5;
+  journeyViewport.style.setProperty('--journey-beam-visible', beamOnRail ? '1' : '0');
   journeyChapters.forEach((item, index) => {
     const reached = String(beamX >= journeyNodeOffsets[index] - .5);
     if (item.dataset.reached !== reached) item.dataset.reached = reached;
@@ -298,7 +299,7 @@ const measureJourney = () => {
     return bounds.left + bounds.width / 2 - trackBounds.left;
   });
   journeyRailStart = journeyNodeOffsets[0];
-  journeyRailLength = trackBounds.width - journeyRailStart;
+  journeyRailLength = journeyNodeOffsets.at(-1) - journeyRailStart;
   const lastMilestoneTravel = journeyTrackStart + journeyNodeOffsets.at(-1) - journeyViewportCenter;
   // Wide layouts need enough travel for the final dot to reach the center;
   // narrow layouts still finish revealing the whole final card.
