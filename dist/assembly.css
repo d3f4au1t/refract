@@ -1,5 +1,6 @@
 /* The prototype is a contained scene; the site's logo and glass keep their geometry. */
 .prototype-story{position:relative;margin:62px 0 74px;--assembly-progress:0;--assembly-top:calc(var(--menu-height) + 12px)}
+.prototype-viewport{position:absolute;top:0;width:0;height:100svh;visibility:hidden;pointer-events:none}
 .prototype-stage{position:relative;display:grid;grid-template-columns:minmax(250px,.8fr) minmax(0,1.6fr);grid-template-rows:1fr auto;gap:0 30px;min-height:620px;border-top:1px solid #b9cddd24;border-bottom:1px solid #b9cddd24}
 .prototype-story.is-scroll{height:calc(var(--assembly-height) + var(--assembly-travel))}
 .is-scroll .prototype-stage{position:sticky;top:var(--assembly-top);height:var(--assembly-height);min-height:0}

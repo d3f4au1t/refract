@@ -11,6 +11,10 @@
   const phaseText = story.querySelector('.prototype-phase-text');
   const description = story.querySelector('.prototype-description');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const viewportProbe = document.createElement('span');
+  viewportProbe.className = 'prototype-viewport';
+  viewportProbe.setAttribute('aria-hidden', 'true');
+  story.append(viewportProbe);
   const phases = ['Start with the parts.', 'Fit the circuit board.', 'Connect the sensor.', 'Seat the display.', 'Close the housing.', 'Switch it on.'];
   let model, loading = false, failed = false, inView = false, frame = 0;
   let travel = 1000, top = 98, progress = 0, manual = 1, width = 1, height = 1;
@@ -45,7 +49,7 @@
     const narrow = innerWidth <= 760;
     top = menuHeight + (narrow ? 4 : 12);
     // A stable small viewport prevents mobile browser chrome from moving the scene.
-    const smallViewport = document.documentElement.clientHeight;
+    const smallViewport = viewportProbe.getBoundingClientRect().height || document.documentElement.clientHeight;
     const stageHeight = Math.min(860, smallViewport - top - 12);
     const scrollable = !failed && !reduced.matches && stageHeight >= (narrow ? 535 : 410);
     travel = Math.max(850, Math.min(1300, smallViewport * 1.25));
@@ -67,6 +71,7 @@
     try {
       const { createPrototype } = await import('./assembly-model.js?v=2');
       model = createPrototype(canvas);
+      lastProgress = -1;
       controls.hidden = false;
       measure();
     } catch {
