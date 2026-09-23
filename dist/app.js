@@ -228,6 +228,8 @@ let journeyStops = [];
 let journeyNodeOffsets = [];
 let journeyRailStart = 0;
 let journeyRailLength = 0;
+let journeyTrackStart = 0;
+let journeyViewportCenter = 0;
 let journeyTop = 0;
 let journeyFrame = 0;
 let journeyMeasureFrame = 0;
@@ -239,9 +241,11 @@ const updateJourney = () => {
   const progress = Math.max(0, Math.min(1, (journeyTop - journey.getBoundingClientRect().top) / journeyTravel));
   journeyPanorama.style.transform = `translate3d(${-journeyTravel * progress}px,0,0)`;
   journey.style.setProperty('--journey-progress', progress.toFixed(4));
-  // The light follows the measured dot centers, independent of card width or gap.
-  const beamX = journeyRailStart + journeyRailLength * progress;
-  journeyTrack.style.setProperty('--journey-beam-x', `${beamX.toFixed(3)}px`);
+  // The light stays at the viewport center while the rail moves underneath it.
+  const beamX = journeyViewportCenter - journeyTrackStart + journeyTravel * progress;
+  const railProgress = Math.max(0, Math.min(1, (beamX - journeyRailStart) / Math.max(1, journeyRailLength)));
+  journeyTrack.style.setProperty('--journey-rail-progress', railProgress.toFixed(6));
+  journeyViewport.style.setProperty('--journey-beam-visible', beamX >= journeyRailStart - .5 ? '1' : '0');
   journeyChapters.forEach((item, index) => {
     const reached = String(beamX >= journeyNodeOffsets[index] - .5);
     if (item.dataset.reached !== reached) item.dataset.reached = reached;
@@ -256,7 +260,7 @@ const updateJourney = () => {
       item.dataset.passed = String(index < chapter);
     });
   }
-  const complete = progress >= .995;
+  const complete = progress >= .995 && chapter === journeyChapters.length - 1;
   journeyPrevious.disabled = progress <= .005;
   journeyNext.disabled = complete;
   journey.classList.toggle('is-complete', complete);
@@ -281,16 +285,26 @@ const measureJourney = () => {
   journey.style.setProperty('--journey-top', `${journeyTop}px`);
   journey.style.setProperty('--journey-height', `${window.innerHeight - journeyTop}px`);
   journeyTravel = Math.max(1, journeyPanorama.scrollWidth - journeyViewport.clientWidth);
-  const trackLeft = journeyTrack.getBoundingClientRect().left;
+  const trackBounds = journeyTrack.getBoundingClientRect();
+  const viewportBounds = journeyViewport.getBoundingClientRect();
+  journeyTrackStart = trackBounds.left - viewportBounds.left;
+  journeyViewportCenter = viewportBounds.width / 2;
   journeyNodeOffsets = journeyNodes.map(node => {
     const bounds = node.getBoundingClientRect();
-    return bounds.left + bounds.width / 2 - trackLeft;
+    return bounds.left + bounds.width / 2 - trackBounds.left;
   });
   journeyRailStart = journeyNodeOffsets[0];
-  journeyRailLength = journeyNodeOffsets.at(-1) - journeyRailStart;
+  journeyRailLength = trackBounds.width - journeyRailStart;
+  const lastMilestoneTravel = journeyTrackStart + journeyNodeOffsets.at(-1) - journeyViewportCenter;
+  // Wide layouts need enough travel for the final dot to reach the center;
+  // narrow layouts still finish revealing the whole final card.
+  journeyTravel = Math.max(journeyTravel, lastMilestoneTravel);
+  const firstNode = journeyNodes[0].getBoundingClientRect();
+  journeyViewport.style.setProperty('--journey-rail-y', `${firstNode.top + firstNode.height / 2 - viewportBounds.top}px`);
   journeyTrack.style.setProperty('--journey-rail-start', `${journeyRailStart}px`);
   journeyTrack.style.setProperty('--journey-rail-length', `${journeyRailLength}px`);
-  journeyStops = journeyNodeOffsets.map(center => journeyTravel * (center - journeyRailStart) / Math.max(1, journeyRailLength));
+  journeyStops = [...new Set([0, ...journeyNodeOffsets.map(center =>
+    Math.max(0, Math.min(journeyTravel, journeyTrackStart + center - journeyViewportCenter))), journeyTravel])];
   const cardsOverflow = [...journey.querySelectorAll('.journey-card')].some(card => card.scrollHeight > card.clientHeight + 1);
   if (cardsOverflow || journeyIntro.scrollHeight > journeyViewport.clientHeight + 1) {
     journey.classList.remove('is-horizontal', 'is-complete');
