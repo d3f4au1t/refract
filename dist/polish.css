@@ -256,6 +256,12 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
 /* Opening information now belongs to the glass itself, not separate dark patches. */
 .hero{min-height:max(350px,calc(100svh - var(--menu-height) - 310px));padding-bottom:40px}
 .glass-content{border-top-color:transparent;box-shadow:none}
+/* Keep a fine rim visible beyond the source glow, following the glass corners. */
+.glass-content>.glass-surface::after{
+ content:"";position:absolute;inset:0 0 auto;height:calc(var(--glass-radius) + 24px);pointer-events:none;
+ border:1px solid rgb(209 228 243 / calc(.3 + var(--edge-glow,0)*.22));border-bottom:0;border-radius:inherit;
+ -webkit-mask-image:linear-gradient(#000 50%,transparent);mask-image:linear-gradient(#000 50%,transparent);
+}
 .glass-intro{max-width:1680px;margin:0 auto;padding:44px 6% 50px;gap:60px}
 .glass-intro .hero-copy{max-width:680px}
 .glass-intro .hero-description{max-width:490px;color:#c4ccd5}
