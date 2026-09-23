@@ -9,6 +9,7 @@
   const output = controls.querySelector('output');
   const phaseNumber = story.querySelector('.prototype-phase-number');
   const phaseText = story.querySelector('.prototype-phase-text');
+  const description = story.querySelector('.prototype-description');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const phases = ['Start with the parts.', 'Fit the circuit board.', 'Connect the sensor.', 'Seat the display.', 'Close the housing.', 'Switch it on.'];
   let model, loading = false, failed = false, inView = false, frame = 0;
@@ -18,7 +19,7 @@
 
   function update() {
     frame = 0;
-    if (document.hidden) return;
+    if (document.hidden || failed) return;
     progress = story.classList.contains('is-scroll') ? clamp((top - story.getBoundingClientRect().top) / travel) : manual;
     const phase = progress < .06 ? 0 : progress < .30 ? 1 : progress < .48 ? 2 : progress < .68 ? 3 : progress < .94 ? 4 : 5;
     if (phase !== lastPhase) {
@@ -50,6 +51,11 @@
     travel = Math.max(850, Math.min(1300, smallViewport * 1.25));
     story.classList.toggle('is-scroll', scrollable);
     story.classList.toggle('is-static', !scrollable);
+    const instructions = model
+      ? scrollable ? 'A circuit board, a sensor and a display. Scroll to see how they fit together.'
+        : 'A circuit board, a sensor and a display. Use the control to see how they fit together.'
+      : 'A circuit board, a sensor and a display, inside a metal housing.';
+    if (description.textContent !== instructions) description.textContent = instructions;
     story.style.setProperty('--assembly-height', `${stageHeight}px`);
     story.style.setProperty('--assembly-travel', `${travel}px`);
     width = Math.max(1, Math.round(art.clientWidth)); height = Math.max(1, Math.round(art.clientHeight));
@@ -59,7 +65,7 @@
     if (model || loading || failed) return;
     loading = true;
     try {
-      const { createPrototype } = await import('./assembly-model.js?v=1');
+      const { createPrototype } = await import('./assembly-model.js?v=2');
       model = createPrototype(canvas);
       controls.hidden = false;
       measure();

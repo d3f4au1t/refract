@@ -136,7 +136,7 @@ export function createPrototype(canvas) {
       ctx.strokeStyle = '#d6c38c'; ctx.stroke();
     }
   });
-  decal(pcb, 3.12, 2.12, .302, traces);
+  decal(pcb, 3.12, 2.12, .317, traces);
   box(pcb, [.72, .11, .68], [-.2, .36, -.02], dark);
   for (let i = 0; i < 9; i++) {
     for (const side of [-1, 1]) {
@@ -189,7 +189,7 @@ export function createPrototype(canvas) {
     }
     ctx.stroke();
   });
-  const screen = decal(display, 2.08, 1.25, .565, displayTexture, -.3, 0, true);
+  const screen = decal(display, 2.08, 1.25, .574, displayTexture, -.3, 0, true);
   screen.material.opacity = 0;
 
   const lid = new THREE.Group(); device.add(lid);
