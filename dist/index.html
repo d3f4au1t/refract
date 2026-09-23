@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="polish.css?v=refinement-1">
   <link rel="stylesheet" href="timeline.css?v=controls-2">
   <link rel="stylesheet" href="teams.css?v=unboxed-groups-1">
+  <link rel="stylesheet" href="assembly.css?v=1">
 </head>
 <body>
 <div class="fixed-backdrop" aria-hidden="true"><img src="assets/refract-background-ai.png?v=1" alt="" width="1672" height="941" fetchpriority="high"><img class="unlit-wordmark refr-lettering" src="assets/refract-background-ai.png?v=1" alt="" width="1672" height="941"></div>
@@ -134,7 +135,28 @@
   </section>
   <section class="section" id="directions" aria-labelledby="directions-title">
     <p class="section-label">Project ideas</p>
-    <div class="section-content"><h2 id="directions-title">What will you build?</h2><p class="body-copy">Build with software, engineering, science or a mix of all three. Here are a few starting points:</p><div class="directions"><div><div class="direction-art art-1" aria-hidden="true"><svg viewBox="0 0 240 110" fill="none"><path class="art-guide" d="M0 55H240M120 0V110"/><path class="art-draw" pathLength="1" d="M30 55L90 22L150 55L90 88L30 55ZM90 22V88M150 55L210 22M150 55L210 88"/><g class="art-nodes"><circle cx="30" cy="55" r="4"/><circle cx="90" cy="22" r="4"/><circle cx="90" cy="88" r="4"/><circle cx="150" cy="55" r="5"/><circle cx="210" cy="22" r="4"/><circle cx="210" cy="88" r="4"/></g><circle class="art-pulse" cx="150" cy="55" r="13"/></svg></div><h3>Software & AI</h3><p>Build an app, try a small model, or automate something you usually do by hand.</p></div><div><div class="direction-art art-2" aria-hidden="true"><svg viewBox="0 0 240 110" fill="none"><path class="art-guide" d="M0 55H240M120 0V110"/><g class="art-orbit"><ellipse class="art-draw" pathLength="1" cx="120" cy="55" rx="80" ry="27"/><ellipse class="art-draw" pathLength="1" cx="120" cy="55" rx="80" ry="27" transform="rotate(-35 120 55)"/><ellipse class="art-draw" pathLength="1" cx="120" cy="55" rx="80" ry="27" transform="rotate(35 120 55)"/></g><circle class="art-core" cx="120" cy="55" r="7"/><circle class="art-satellite" cx="200" cy="55" r="4"/></svg></div><h3>Robotics & hardware</h3><p>Make a robot, work with sensors, or build a physical prototype.</p></div><div><div class="direction-art art-3" aria-hidden="true"><svg viewBox="0 0 240 110" fill="none"><path class="art-guide" d="M16 28H224M16 55H224M16 82H224"/><path class="art-bars" d="M32 83V64M65 83V46M98 83V58M131 83V29M164 83V43M197 83V17"/><path class="art-draw" pathLength="1" d="M22 76L55 59L88 66L121 38L154 46L187 24L216 32"/><g class="art-nodes"><circle cx="121" cy="38" r="4"/><circle cx="187" cy="24" r="4"/></g></svg></div><h3>Science & data</h3><p>Use a dataset or a simulation to investigate a question.</p></div><div><div class="direction-art art-4" aria-hidden="true"><svg viewBox="0 0 240 110" fill="none"><path class="art-guide" d="M0 55H240M120 0V110"/><g class="art-intersections"><circle class="art-draw" pathLength="1" cx="91" cy="55" r="38"/><circle class="art-draw" pathLength="1" cx="149" cy="55" r="38"/><path class="art-draw" pathLength="1" d="M120 7L168 55L120 103L72 55L120 7Z"/></g><path class="art-center" d="M114 55H126M120 49V61"/></svg></div><h3>Something else</h3><p>Combine subjects in one project. These examples are just a starting point.</p></div></div></div>
+    <div class="section-content"><h2 id="directions-title">What will you build?</h2><p class="body-copy">Build with software, engineering, science or a mix of all three. Here are a few starting points:</p>
+      <figure class="prototype-story" id="prototype" aria-labelledby="prototype-title" aria-describedby="prototype-description">
+        <div class="prototype-stage">
+          <figcaption class="prototype-copy">
+            <p class="prototype-kicker">EXAMPLE BUILD / 01</p>
+            <h3 id="prototype-title">Build a<br>pocket sensor.</h3>
+            <p class="prototype-description" id="prototype-description">A circuit board, a sensor and a display. Scroll to see how they fit together.</p>
+            <p class="prototype-phase" aria-hidden="true"><span class="prototype-phase-number">01</span><span class="prototype-phase-text">Start with the parts.</span></p>
+          </figcaption>
+          <div class="prototype-art" role="img" aria-label="An example temperature sensor assembles from a circuit board, sensor, display and metal housing, then powers on with sample readings.">
+            <img class="prototype-fallback" src="assets/prototype-fallback.svg" alt="" width="700" height="650" loading="lazy">
+            <canvas aria-hidden="true"></canvas>
+            <span class="prototype-caption" aria-hidden="true">Illustrative prototype · sample readings</span>
+          </div>
+          <div class="prototype-controls" hidden>
+            <label for="prototype-progress">Assembly</label>
+            <input id="prototype-progress" type="range" min="0" max="100" value="0" aria-label="Prototype assembly progress">
+            <output for="prototype-progress" aria-live="off">0% assembled</output>
+          </div>
+        </div>
+      </figure>
+      <div class="directions"><div><div class="direction-art art-1" aria-hidden="true"><svg viewBox="0 0 240 110" fill="none"><path class="art-guide" d="M0 55H240M120 0V110"/><path class="art-draw" pathLength="1" d="M30 55L90 22L150 55L90 88L30 55ZM90 22V88M150 55L210 22M150 55L210 88"/><g class="art-nodes"><circle cx="30" cy="55" r="4"/><circle cx="90" cy="22" r="4"/><circle cx="90" cy="88" r="4"/><circle cx="150" cy="55" r="5"/><circle cx="210" cy="22" r="4"/><circle cx="210" cy="88" r="4"/></g><circle class="art-pulse" cx="150" cy="55" r="13"/></svg></div><h3>Software & AI</h3><p>Build an app, try a small model, or automate something you usually do by hand.</p></div><div><div class="direction-art art-2" aria-hidden="true"><svg viewBox="0 0 240 110" fill="none"><path class="art-guide" d="M0 55H240M120 0V110"/><g class="art-orbit"><ellipse class="art-draw" pathLength="1" cx="120" cy="55" rx="80" ry="27"/><ellipse class="art-draw" pathLength="1" cx="120" cy="55" rx="80" ry="27" transform="rotate(-35 120 55)"/><ellipse class="art-draw" pathLength="1" cx="120" cy="55" rx="80" ry="27" transform="rotate(35 120 55)"/></g><circle class="art-core" cx="120" cy="55" r="7"/><circle class="art-satellite" cx="200" cy="55" r="4"/></svg></div><h3>Robotics & hardware</h3><p>Make a robot, work with sensors, or build a physical prototype.</p></div><div><div class="direction-art art-3" aria-hidden="true"><svg viewBox="0 0 240 110" fill="none"><path class="art-guide" d="M16 28H224M16 55H224M16 82H224"/><path class="art-bars" d="M32 83V64M65 83V46M98 83V58M131 83V29M164 83V43M197 83V17"/><path class="art-draw" pathLength="1" d="M22 76L55 59L88 66L121 38L154 46L187 24L216 32"/><g class="art-nodes"><circle cx="121" cy="38" r="4"/><circle cx="187" cy="24" r="4"/></g></svg></div><h3>Science & data</h3><p>Use a dataset or a simulation to investigate a question.</p></div><div><div class="direction-art art-4" aria-hidden="true"><svg viewBox="0 0 240 110" fill="none"><path class="art-guide" d="M0 55H240M120 0V110"/><g class="art-intersections"><circle class="art-draw" pathLength="1" cx="91" cy="55" r="38"/><circle class="art-draw" pathLength="1" cx="149" cy="55" r="38"/><path class="art-draw" pathLength="1" d="M120 7L168 55L120 103L72 55L120 7Z"/></g><path class="art-center" d="M114 55H126M120 49V61"/></svg></div><h3>Something else</h3><p>Combine subjects in one project. These examples are just a starting point.</p></div></div></div>
   </section>
   <section class="journey-section" id="experience" aria-labelledby="experience-title" aria-describedby="timeline-note">
     <div class="journey-pin">
@@ -199,5 +221,6 @@
 
 <script src="app.js?v=subtle-light-delay-1"></script>
 <script src="teams.js?v=event-copy-1"></script>
+<script src="assembly.js?v=1"></script>
 </body>
 </html>
