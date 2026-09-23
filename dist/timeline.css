@@ -133,3 +133,11 @@
 .journey-skip{justify-self:end;margin-left:0}
 .journey-section:not(.is-horizontal) .journey-skip{grid-column:1/-1}
 @media(max-width:380px){.journey-progress-line{display:none}}
+
+/* A scroll-driven light travels along the existing milestone rail. */
+.is-horizontal .journey-track{position:relative;height:min(calc(100% - 24px),560px)}
+.is-horizontal .journey-track::before{content:"";position:absolute;z-index:2;pointer-events:none;left:var(--journey-rail-start,6.5px);top:5px;width:var(--journey-rail-length,0px);height:1px;background:linear-gradient(90deg,#aecde2aa,#ecf8ff);box-shadow:0 0 8px #b9e0ff80;transform:scaleX(var(--journey-progress));transform-origin:left center}
+.is-horizontal .journey-track::after{content:"";position:absolute;z-index:3;pointer-events:none;left:0;top:.5px;width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px #d7efff22,0 0 12px 4px #d5edffc0,0 0 30px 8px #b0d7ff38;transform:translate3d(calc(var(--journey-beam-x,6.5px) - 5px),0,0);will-change:transform}
+.is-horizontal .journey-chapter:is([data-current],[data-passed]) .journey-node{background:#1b2730;box-shadow:none}
+.is-horizontal .journey-chapter[data-reached="true"] .journey-node{background:#cde4f4;border-color:#e5f4ff;box-shadow:0 0 10px #cde8ff40}
+@media(max-width:760px){.is-horizontal .journey-track{height:min(calc(100% - 24px),480px)}}

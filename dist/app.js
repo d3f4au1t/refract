@@ -218,6 +218,7 @@ const journeyTrack = journey.querySelector('.journey-track');
 const journeyPanorama = journey.querySelector('.journey-panorama');
 const journeyIntro = journey.querySelector('.journey-intro');
 const journeyChapters = [...journey.querySelectorAll('.journey-chapter')];
+const journeyNodes = journeyChapters.map(chapter => chapter.querySelector('.journey-node'));
 const journeyCount = journey.querySelector('.journey-count');
 const journeyHint = journey.querySelector('.journey-scroll-hint>span');
 const journeyPrevious = journey.querySelector('.journey-previous');
@@ -225,6 +226,9 @@ const journeyNext = journey.querySelector('.journey-next');
 let journeyTravel = 0;
 let journeyCenters = [];
 let journeyStops = [];
+let journeyNodeOffsets = [];
+let journeyRailStart = 0;
+let journeyRailLength = 0;
 let journeyTop = 0;
 let journeyFrame = 0;
 let journeyMeasureFrame = 0;
@@ -236,6 +240,13 @@ const updateJourney = () => {
   const progress = Math.max(0, Math.min(1, (journeyTop - journey.getBoundingClientRect().top) / journeyTravel));
   journeyPanorama.style.transform = `translate3d(${-journeyTravel * progress}px,0,0)`;
   journey.style.setProperty('--journey-progress', progress.toFixed(4));
+  // The light follows the measured dot centers, independent of card width or gap.
+  const beamX = journeyRailStart + journeyRailLength * progress;
+  journeyTrack.style.setProperty('--journey-beam-x', `${beamX.toFixed(3)}px`);
+  journeyChapters.forEach((item, index) => {
+    const reached = String(beamX >= journeyNodeOffsets[index] - .5);
+    if (item.dataset.reached !== reached) item.dataset.reached = reached;
+  });
   const travel = journeyTravel * progress;
   // Track the card nearest the viewport's center, rather than equal scroll slices.
   const chapter = journeyCenters.reduce((closest, center, index) =>
@@ -278,6 +289,15 @@ const measureJourney = () => {
     const bounds = chapter.getBoundingClientRect();
     return bounds.left - panoramaLeft + bounds.width / 2 - journeyViewport.clientWidth / 2;
   });
+  const trackLeft = journeyTrack.getBoundingClientRect().left;
+  journeyNodeOffsets = journeyNodes.map(node => {
+    const bounds = node.getBoundingClientRect();
+    return bounds.left + bounds.width / 2 - trackLeft;
+  });
+  journeyRailStart = journeyNodeOffsets[0];
+  journeyRailLength = journeyNodeOffsets.at(-1) - journeyRailStart;
+  journeyTrack.style.setProperty('--journey-rail-start', `${journeyRailStart}px`);
+  journeyTrack.style.setProperty('--journey-rail-length', `${journeyRailLength}px`);
   journeyStops = [...new Set([0, ...journeyCenters.map(center => Math.max(0, Math.min(journeyTravel, center))), journeyTravel])];
   const cardsOverflow = [...journey.querySelectorAll('.journey-card')].some(card => card.scrollHeight > card.clientHeight + 1);
   if (cardsOverflow || journeyIntro.scrollHeight > journeyViewport.clientHeight + 1) {
