@@ -72,7 +72,7 @@
       formation.dataset.phase = 'teams';
       status.textContent = 'Example: 16 teams of 2–5';
       finishTimer = setTimeout(settle, 1600);
-    }, fromReplay ? 1900 : 1250);
+    }, fromReplay ? 1900 : 250);
   };
   const observer = new IntersectionObserver(entries => {
     visible = entries[0].isIntersecting && entries[0].intersectionRatio >= .4;
