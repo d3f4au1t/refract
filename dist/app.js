@@ -224,7 +224,6 @@ const journeyHint = journey.querySelector('.journey-scroll-hint>span');
 const journeyPrevious = journey.querySelector('.journey-previous');
 const journeyNext = journey.querySelector('.journey-next');
 let journeyTravel = 0;
-let journeyCenters = [];
 let journeyStops = [];
 let journeyNodeOffsets = [];
 let journeyRailStart = 0;
@@ -247,10 +246,8 @@ const updateJourney = () => {
     const reached = String(beamX >= journeyNodeOffsets[index] - .5);
     if (item.dataset.reached !== reached) item.dataset.reached = reached;
   });
-  const travel = journeyTravel * progress;
-  // Track the card nearest the viewport's center, rather than equal scroll slices.
-  const chapter = journeyCenters.reduce((closest, center, index) =>
-    Math.abs(center - travel) < Math.abs(journeyCenters[closest] - travel) ? index : closest, 0);
+  // The counter, active card and illuminated dots all use the same progress point.
+  const chapter = Math.max(0, journeyNodeOffsets.findLastIndex(center => beamX >= center - .5));
   if (chapter !== currentChapter) {
     currentChapter = chapter;
     journeyCount.textContent = String(chapter + 1).padStart(2, '0');
@@ -284,11 +281,6 @@ const measureJourney = () => {
   journey.style.setProperty('--journey-top', `${journeyTop}px`);
   journey.style.setProperty('--journey-height', `${window.innerHeight - journeyTop}px`);
   journeyTravel = Math.max(1, journeyPanorama.scrollWidth - journeyViewport.clientWidth);
-  const panoramaLeft = journeyPanorama.getBoundingClientRect().left;
-  journeyCenters = journeyChapters.map(chapter => {
-    const bounds = chapter.getBoundingClientRect();
-    return bounds.left - panoramaLeft + bounds.width / 2 - journeyViewport.clientWidth / 2;
-  });
   const trackLeft = journeyTrack.getBoundingClientRect().left;
   journeyNodeOffsets = journeyNodes.map(node => {
     const bounds = node.getBoundingClientRect();
@@ -298,7 +290,7 @@ const measureJourney = () => {
   journeyRailLength = journeyNodeOffsets.at(-1) - journeyRailStart;
   journeyTrack.style.setProperty('--journey-rail-start', `${journeyRailStart}px`);
   journeyTrack.style.setProperty('--journey-rail-length', `${journeyRailLength}px`);
-  journeyStops = [...new Set([0, ...journeyCenters.map(center => Math.max(0, Math.min(journeyTravel, center))), journeyTravel])];
+  journeyStops = journeyNodeOffsets.map(center => journeyTravel * (center - journeyRailStart) / Math.max(1, journeyRailLength));
   const cardsOverflow = [...journey.querySelectorAll('.journey-card')].some(card => card.scrollHeight > card.clientHeight + 1);
   if (cardsOverflow || journeyIntro.scrollHeight > journeyViewport.clientHeight + 1) {
     journey.classList.remove('is-horizontal', 'is-complete');
