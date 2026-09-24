@@ -121,7 +121,8 @@ test('Google authorization creates a protected OAuth flow and rejects an untrust
   assert.equal(url.searchParams.get('redirect_uri'), 'http://localhost:3001/api/auth/callback/google');
   assert.ok(url.searchParams.get('state'));
   assert.ok(url.searchParams.get('code_challenge'));
-  assert.ok(!url.searchParams.get('scope').includes('gmail'));
+  assert.deepEqual(url.searchParams.get('scope').split(' ').sort(), ['email', 'openid', 'profile']);
+  assert.equal((await f.request('/api/auth/sign-in/social', { provider: 'google', scopes: ['https://www.googleapis.com/auth/drive'] })).status, 400);
   assert.equal((await f.request('/api/auth/sign-in/social', { provider: 'google', callbackURL: 'https://attacker.example', disableRedirect: true })).status, 403);
 });
 

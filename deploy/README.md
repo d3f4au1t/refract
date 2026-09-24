@@ -1,6 +1,6 @@
 # AWS registration service
 
-Refract is served at [refracthack.org](https://refracthack.org). Nginx serves `dist/` over HTTPS on port 443; `/api/` proxies to the Node service on `127.0.0.1:3001`. The service runs as the dedicated `refract` user. Node 24 is installed from Amazon Linux's repository. GitHub and Resend email sign-in are configured and were tested live on September 24, 2026. Google remains disabled until its credentials are added. Each provider is enabled independently. No placeholder login or test-code endpoint is deployed.
+Refract is served at [refracthack.org](https://refracthack.org). Nginx serves `dist/` over HTTPS on port 443; `/api/` proxies to the Node service on `127.0.0.1:3001`. The service runs as the dedicated `refract` user. Node 24 is installed from Amazon Linux's repository. Google, GitHub and Resend email sign-in are configured and were tested live on September 24, 2026. Each provider is enabled independently. No placeholder login or test-code endpoint is deployed.
 
 ## Public ports
 
@@ -55,6 +55,14 @@ Edit `/etc/refract/refract.env` on the server with `sudoedit`, then run `sudo sy
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: a Google OAuth **Web application**. Set the JavaScript origin to `https://refracthack.org` and authorize `https://refracthack.org/api/auth/callback/google` as the redirect URI. Local development uses `http://localhost:3001/api/auth/callback/google`.
 
 The domain and HTTPS connection do not activate GitHub, Google or Resend by themselves. Configure those accounts and their credentials separately, then test each sign-in method.
+
+## Google sign-in
+
+The Google Cloud project is `Refract` (`future-haiku-509618-g2`), with a Web application client named `Refract website`. Its only JavaScript origin is `https://refracthack.org` and its only redirect URI is `https://refracthack.org/api/auth/callback/google`. The audience is External and the publishing status is In production. Declared scopes are OpenID, basic profile and email; no sensitive or restricted scopes are requested.
+
+The public privacy page is at `/privacy/` and is linked from the homepage, registration page, account page and Google consent screen. Google currently displays `refracthack.org` during sign-in; custom branding verification remains separate from the working basic sign-in flow. The live test returned to the existing account with its original registration reference and organizer access, without creating another registration.
+
+Credentials are stored only in the private AWS environment file. Deployment preserves them. If the Google client is replaced, update both values together and repeat the live sign-in check.
 
 ## Organizer access
 

@@ -1,5 +1,8 @@
 # Refract prelaunch audit
 
+> September 24 update: the site now uses `https://refracthack.org` with trusted HTTPS. Google, GitHub and email sign-in have all completed live tests. Google is in production mode with only basic profile/email/OpenID scopes. Its live test preserved the existing account, registration reference and admin access. The September 22–23 provider/domain findings below are historical; unfinished event information and operational items still apply.
+
+
 **Decision: keep the site in preview. Do not announce registration as open yet.**
 
 **September 24 update:** The site now runs at [refracthack.org](https://refracthack.org) with HTTPS. GitHub sign-in is enabled: live consent, verified-email return to the details form, sign-out and repeat sign-in passed. No event registration was submitted during this check. Email sign-in was subsequently activated with Resend and `registration@refracthack.org`: the domain was verified, a live code email was delivered, and that code signed in to the existing account. The sending key is restricted to this domain. Google still needs credentials. The earlier provider and IP/domain findings below describe the September 22–23 deployment; current setup is in [AWS notes](../deploy/README.md).
