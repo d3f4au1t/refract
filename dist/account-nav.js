@@ -3,7 +3,10 @@
   const signup = document.querySelector('.hero-actions [data-registration]');
   let request;
   const render = signedIn => {
-    labels.forEach(label => { label.textContent = signedIn ? 'Account' : 'Register'; });
+    labels.forEach(label => {
+      label.textContent = signedIn ? 'Account' : 'Register';
+      label.closest('a').href = signedIn ? '/account/' : '/register/';
+    });
     signup.hidden = signedIn;
   };
   async function refreshAccount() {

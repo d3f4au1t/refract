@@ -11,7 +11,7 @@
   <link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/register/register.css?v=github-1">
-  <script src="/register/register.js?v=admin-return-1" defer></script>
+  <script src="/register/register.js?v=account-page-1" defer></script>
 </head>
 <body class="registration-page">
   <header class="registration-header">
@@ -75,14 +75,6 @@
             <button class="registration-submit" type="submit"><span>Complete registration</span><span aria-hidden="true">→</span></button>
           </form>
           <button class="quiet-button sign-out" type="button">Use a different account</button>
-        </div>
-        <div id="complete-view" class="registration-view" hidden>
-          <div class="success-mark" aria-hidden="true">✓</div>
-          <h1 id="complete-title" tabindex="-1">You’re on<br>the list.</h1>
-          <p class="registration-description">Your registration is saved, <strong id="registered-name"></strong>. Join us on [Start Date] at [Venue].</p>
-          <dl class="registration-receipt"><div><dt>Email</dt><dd class="account-email"></dd></div><div><dt>Reference</dt><dd id="registration-reference"></dd></div><div><dt>Status</dt><dd>Registration received</dd></div></dl>
-          <a class="registration-submit" href="/"><span>Back to the event</span><span aria-hidden="true">↗</span></a>
-          <div class="account-actions"><button id="edit-details" class="quiet-button" type="button">Edit your details</button><button class="quiet-button sign-out" type="button">Sign out</button></div>
         </div>
         <p class="registration-note">Registration: [Registration Opens]–[Signup Deadline]. Event: [Start Date]–[End Date].</p>
         <details class="data-note"><summary>What information do we keep?</summary><p>Your name, verified email and registration status are stored for the Refract organizers. GitHub and Google share your basic profile and email address. We don’t request access to your repositories, inbox, or password.</p></details>

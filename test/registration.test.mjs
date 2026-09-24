@@ -402,12 +402,14 @@ async function organizerFixture(t) {
 }
 test('admin data and CSV require a verified, allowlisted account and valid session', async t => {
   const f = await organizerFixture(t);
+  assert.equal((await f.request('/api/registration', undefined, f.adminCookie)).data.user.isOrganizer, true);
   for (const path of ['/api/admin/registrations', '/api/admin/registrations.csv']) {
     assert.equal((await f.request(path)).status, 401);
     assert.equal((await f.request(path, undefined, f.adminCookie)).status, 200);
   }
   await f.send('other@example.com');
   const other = await f.verify('other@example.com', f.emails.at(-1).otp);
+  assert.equal((await f.request('/api/registration', undefined, other.cookie)).data.user.isOrganizer, false);
   for (const path of ['/api/admin/registrations?role=admin&user_id=organizer', '/api/admin/registrations.csv']) {
     const denied = await f.request(path, undefined, other.cookie);
     assert.equal(denied.status, 403);

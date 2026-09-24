@@ -146,7 +146,7 @@ export async function createApp(config, overrides = {}) {
   installAdminRoutes(app, { db, requireUser, adminUserIds: config.adminUserIds });
   const registrationFor = userId => db.prepare('SELECT reference, name, status, created_at AS createdAt FROM registrations WHERE user_id = ?').get(userId) || null;
   app.get('/api/registration', requireUser, (req, res) => {
-    res.json({ user: { name: req.user.name, email: req.user.email }, registration: registrationFor(req.user.id) });
+    res.json({ user: { name: req.user.name, email: req.user.email, isOrganizer: config.adminUserIds?.includes(req.user.id) || false }, registration: registrationFor(req.user.id) });
   });
   app.post('/api/registration', requireUser, (req, res) => {
     const name = typeof req.body?.name === 'string' ? req.body.name.trim().replace(/\s+/g, ' ') : '';

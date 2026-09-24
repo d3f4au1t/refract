@@ -34,6 +34,7 @@ Open [localhost:3001](http://localhost:3001). You can work on the event page wit
 | `dist/teams.js`, `dist/teams.css` | The 60-person team animation |
 | `dist/register/` | Registration forms and their browser code |
 | `dist/admin/` | Private organizer dashboard |
+| `dist/account/` | Participant account and registration details |
 | `dist/assets/` | Logos, artwork and fonts |
 | `server/` | Sign-in, email delivery and registration storage |
 | `test/` | API and configuration tests |
@@ -44,6 +45,8 @@ The background logo stays fixed while the glass panel scrolls over it. The light
 ## Registration
 
 Registration has its own page at `/register/`. Participants verify their email, enter their name and confirm that they attend PRISMS. Each account gets one pending registration with a reference number. Editing the name keeps the same reference; registering does not automatically approve an event place.
+
+After registering, participants go to `/account/` to see their details, edit their registered name or sign out. Signed-in visitors who have not submitted a form can finish registration from there. Organizer accounts also have a link to the admin dashboard.
 
 GitHub and Google sign-in need OAuth credentials. Email verification needs a Resend key and a verified sender. See [AWS setup](deploy/README.md) for configuration, deployment and backups. Keep credentials in `.env` locally or the private environment file on the server.
 

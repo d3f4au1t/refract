@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#050709">
+  <title>Your account — Refract</title>
+  <link rel="icon" href="/assets/favicon-rounded.svg?v=1" type="image/svg+xml">
+  <link rel="stylesheet" href="/account/account.css?v=1">
+  <script defer src="/account/account.js?v=1"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to account</a>
+  <header><a class="brand" href="/" aria-label="Refract home"><span class="symbol" aria-hidden="true"></span>REFRACT</a><nav aria-label="Account navigation"><a href="/">Back to the event <span aria-hidden="true">↗</span></a><button id="sign-out" hidden>Sign out</button></nav></header>
+  <main id="main" tabindex="-1">
+    <div class="page-heading"><p class="eyebrow">REFRACT / ACCOUNT</p><h1>Your account<span>.</span></h1><p id="page-description">Loading your details…</p></div>
+    <div id="account" hidden>
+      <div class="account-grid">
+        <section class="profile" aria-labelledby="profile-title">
+          <div class="section-heading"><h2 id="profile-title">Your details</h2><span class="verified"><span aria-hidden="true">✓</span> Email verified</span></div>
+          <dl class="profile-details"><div><dt>Name</dt><dd id="profile-name"></dd></div><div><dt>Email</dt><dd id="profile-email"></dd></div></dl>
+          <button id="edit-name" class="text-button" hidden>Edit registered name <span aria-hidden="true">↗</span></button>
+          <form id="name-form" hidden>
+            <label for="full-name">Registered name</label><input id="full-name" name="name" autocomplete="name" minlength="2" maxlength="100" required aria-describedby="name-help">
+            <p id="name-help" class="muted">This is the name the organizers will see on your registration.</p>
+            <div class="form-actions"><button id="save-name" class="button primary" type="submit">Save changes</button><button id="cancel-edit" class="button" type="button">Cancel</button></div>
+          </form>
+          <p id="save-status" class="save-status" role="status" aria-live="polite"></p>
+        </section>
+        <section class="registration-card" aria-labelledby="registration-title">
+          <div class="card-top"><p class="eyebrow">PRISMS HACKATHON</p><span class="card-symbol symbol" aria-hidden="true"></span></div>
+          <h2 id="registration-title">Your registration</h2>
+          <div id="registered" hidden>
+            <p class="status-badge"><span aria-hidden="true"></span><span id="registration-status">Registration received</span></p>
+            <dl class="receipt"><div><dt>Reference number</dt><dd id="reference"></dd></div><div><dt>Submitted</dt><dd id="submitted"></dd></div><div><dt>Eligibility</dt><dd>PRISMS student · self-confirmed</dd></div></dl>
+            <p class="card-note">Your form is saved. Registration does not yet confirm an event place.</p>
+          </div>
+          <div id="not-registered" hidden><p class="incomplete-title">You haven’t registered yet.</p><p class="card-note">Your account is ready. Add your name and confirm that you’re a PRISMS student to submit your registration.</p><a class="button primary" href="/register/">Complete registration <span aria-hidden="true">↗</span></a></div>
+        </section>
+      </div>
+      <a id="organizer-link" class="organizer-link" href="/admin/" hidden><span><strong>Organizer dashboard</strong><span>View registrations and export the participant list.</span></span><span aria-hidden="true">↗</span></a>
+      <p class="privacy-note">Your name, verified email and registration details are shared with the Refract organizers.</p>
+    </div>
+    <div id="error" class="error" role="alert" tabindex="-1" hidden><p id="error-message"></p><button id="retry" class="button" type="button">Try again</button><a id="sign-in" class="button" href="/register/?next=account" hidden>Sign in</a></div>
+    <noscript><p class="muted">Turn on JavaScript to view your account.</p></noscript>
+  </main>
+  <footer><span>REFRACT</span><a href="/">Back to the event <span aria-hidden="true">↗</span></a></footer>
+</body>
+</html>

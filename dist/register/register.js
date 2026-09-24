@@ -1,7 +1,8 @@
 (() => {
   const $ = selector => document.querySelector(selector);
   const adminSignIn = new URLSearchParams(location.search).get('next') === 'admin';
-  const returnPath = adminSignIn ? '/register/?next=admin' : '/register/';
+  const accountSignIn = new URLSearchParams(location.search).get('next') === 'account';
+  const returnPath = adminSignIn ? '/register/?next=admin' : accountSignIn ? '/register/?next=account' : '/register/';
   if (adminSignIn) {
     document.title = 'Organizer sign-in — Refract';
     $('#registration-title').textContent = 'Organizer sign-in.';
@@ -9,7 +10,14 @@
     $('.registration-steps').hidden = true;
     $('.registration-note').hidden = true;
   }
-  const views = ['start', 'verify', 'details', 'complete', 'recover'];
+  if (accountSignIn) {
+    document.title = 'Sign in — Refract';
+    $('#registration-title').textContent = 'Welcome back.';
+    $('.registration-description').textContent = 'Sign in to view your account.';
+    $('.registration-steps').hidden = true;
+    $('.registration-note').hidden = true;
+  }
+  const views = ['start', 'verify', 'details', 'recover'];
   const errorBox = $('#form-error');
   const notice = $('#service-notice');
   const retryButton = $('#retry-connection');
@@ -71,7 +79,6 @@
     views.forEach(name => { $(`#${name}-view`).hidden = name !== view; });
     const title = view === 'start' ? $('#registration-title') : $(`#${view}-title`);
     $('.registration-panel').setAttribute('aria-labelledby', title.id);
-    $('.registration-panel').classList.toggle('is-complete', view === 'complete');
     document.querySelectorAll('[data-step]').forEach(step => {
       const active = (view === 'start' || view === 'verify') ? '1' : '2';
       if (step.dataset.step === active) step.setAttribute('aria-current', 'step');
@@ -155,14 +162,11 @@
   function showAccount(data, focus = true) {
     clearPending();
     if (adminSignIn) { window.location.replace('/admin/'); return; }
+    if (accountSignIn || data.registration) { window.location.replace('/account/'); return; }
     document.querySelectorAll('.account-email').forEach(element => { element.textContent = data.user.email; });
     $('#full-name').value = data.registration?.name || (data.user.name !== data.user.email ? data.user.name : '') || '';
     $('#prisms-student').checked = Boolean(data.registration);
-    if (data.registration) {
-      $('#registered-name').textContent = data.registration.name;
-      $('#registration-reference').textContent = data.registration.reference;
-      showView('complete', focus);
-    } else showView('details', focus);
+    showView('details', focus);
     notice.hidden = true;
   }
   $('#email-form').addEventListener('submit', event => {
@@ -244,7 +248,7 @@
   };
   Object.entries(providers).forEach(([provider, details]) => {
     $(`#${provider}-sign-in`).addEventListener('click', event => busy(event.currentTarget, async () => {
-      const data = await api('/api/auth/sign-in/social', { provider, callbackURL: returnPath, errorCallbackURL: `${returnPath}${adminSignIn ? '&' : '?'}error=${provider}`, disableRedirect: true });
+      const data = await api('/api/auth/sign-in/social', { provider, callbackURL: returnPath, errorCallbackURL: `${returnPath}${adminSignIn || accountSignIn ? '&' : '?'}error=${provider}`, disableRedirect: true });
       const url = new URL(data.url);
       if (url.protocol !== 'https:' || url.hostname !== details.host || url.port || url.username || url.password || (details.path && url.pathname !== details.path)) {
         throw new Error(`Couldn’t open ${details.label} sign-in. Please try again.`);
@@ -270,7 +274,6 @@
       showAccount(await api('/api/registration', { name, student: $('#prisms-student').checked }));
     }, 'Saving your registration…');
   });
-  $('#edit-details').addEventListener('click', () => { clearError(); showView('details'); });
   document.querySelectorAll('.sign-out').forEach(button => button.addEventListener('click', () => busy(button, async () => {
     await api('/api/auth/sign-out', {});
     clearPending(); window.location.replace(returnPath);
