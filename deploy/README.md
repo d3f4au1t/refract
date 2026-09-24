@@ -1,12 +1,28 @@
 # AWS registration service
 
-Refract is served only at `https://18.188.82.113:8443/`. Nginx listens on HTTPS port 8443 and serves `dist/`; `/api/` proxies to the Node service on `127.0.0.1:3001`. The service runs as the dedicated `refract` user. Node 24 is installed from Amazon Linux's repository. Google and Resend are disabled independently until their configuration is present. No placeholder login or test-code endpoint is deployed.
+Refract is served at [refracthack.org](https://refracthack.org). Nginx serves `dist/` over HTTPS on port 443; `/api/` proxies to the Node service on `127.0.0.1:3001`. The service runs as the dedicated `refract` user. Node 24 is installed from Amazon Linux's repository. Google and Resend are disabled independently until their configuration is present. No placeholder login or test-code endpoint is deployed.
 
 ## Public ports
 
-Allow inbound TCP 8443 in the instance security group (`sg-025e8c3d3af06c7c0`). Keep TCP 80 open for `/.well-known/acme-challenge/` so the IP certificate can renew. Every other HTTP request is closed without a response. Nothing listens on port 443, so the IP without `:8443` does not serve the site. Plain HTTP on port 8443 redirects to HTTPS on that same port. Leave SSH access unchanged.
+Allow inbound TCP 80 and 443 in the instance security group (`sg-025e8c3d3af06c7c0`). Port 80 serves `/.well-known/acme-challenge/` for certificate renewal and redirects other requests to HTTPS. `www.refracthack.org` redirects to `refracthack.org`, preserving the path and query string. Keep port 8443 open for existing `https://18.188.82.113:8443/` bookmarks, which also redirect to the domain. Leave SSH access unchanged.
 
-The application origin is `https://18.188.82.113:8443`. Keep this port in browser links, authentication origins and any future OAuth callback URLs. The installer updates only `BETTER_AUTH_URL` and preserves private credentials and registration data.
+The application origin is `https://refracthack.org`. The installer updates only `BETTER_AUTH_URL` and preserves private credentials and registration data. Existing IP-address sessions do not transfer to the domain; participants sign in again.
+
+## DNS and certificates
+
+Namecheap BasicDNS holds an A record for `@` pointing to `18.188.82.113` and a CNAME for `www` pointing to `refracthack.org`. If the server's public IP changes, update the A record. Use an Elastic IP to keep that address stable.
+
+The domain certificate covers both `refracthack.org` and `www.refracthack.org`. It lives under `/etc/letsencrypt/live/refracthack.org/`; the legacy IP certificate remains under `/etc/letsencrypt/live/refract-ip/`. Private keys stay on the server.
+
+The existing `refract-certbot-renew.timer` renews both certificates with `/opt/refract-certbot/bin/certbot`. Its deploy hook validates and reloads Nginx after renewal. To issue the domain certificate on this host:
+
+```sh
+sudo /opt/refract-certbot/bin/certbot certonly --non-interactive --webroot \
+  -w /var/lib/refract-acme --cert-name refracthack.org \
+  -d refracthack.org -d www.refracthack.org --keep-until-expiring
+```
+
+Test renewal with `sudo /opt/refract-certbot/bin/certbot renew --cert-name refracthack.org --dry-run`.
 
 ## Private configuration
 
@@ -24,21 +40,21 @@ Create a [Resend sending key](https://resend.com/api-keys) after [verifying the 
 
 Edit `/etc/refract/refract.env` on the server with `sudoedit`, then run `sudo systemctl restart refract`. This file is root-only and outside the release directory. Never commit it.
 
-- `BETTER_AUTH_URL`: the public HTTPS origin, without a path. Currently the server uses its IP address. Google OAuth needs a domain rather than a public IP.
+- `BETTER_AUTH_URL`: `https://refracthack.org`, without a trailing slash or port.
 - `BETTER_AUTH_SECRET`: generated once during installation. Preserve it between deployments.
 - `RESEND_API_KEY`: a sending key from your Resend account.
-- `RESEND_FROM_EMAIL`: e.g. `Refract <registration@your-verified-domain.example>`. Verify that domain in Resend first. A test sender cannot email arbitrary participants.
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: a Google OAuth **Web application**. Authorize `https://YOUR_DOMAIN:8443/api/auth/callback/google`. Local development uses `http://localhost:3001/api/auth/callback/google`.
+- `RESEND_FROM_EMAIL`: `Refract <registration@refracthack.org>` after verifying `refracthack.org` in Resend. Add the DNS records Resend supplies in Namecheap. A test sender cannot email arbitrary participants.
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: a Google OAuth **Web application**. Set the JavaScript origin to `https://refracthack.org` and authorize `https://refracthack.org/api/auth/callback/google` as the redirect URI. Local development uses `http://localhost:3001/api/auth/callback/google`.
 
-Point the domain to the server and install its TLS certificate before switching `BETTER_AUTH_URL`. Update Nginx's `server_name`, port configuration, and certificate paths at the same time. The installation script intentionally preserves the server's existing `refract-ip` certificate; update that script when moving to a domain certificate.
+The domain and HTTPS connection do not activate Google or Resend by themselves. Configure those accounts and their credentials separately, then test each sign-in method.
 
 ## Deploy a committed release
 
 1. Push the release to GitHub and archive the intended commit with `git archive` (do not copy `.env`, local databases or `node_modules`).
 2. Extract it to `/opt/refract/releases/FULL_GIT_SHA` on AWS.
 3. Run `npm ci --omit=dev --ignore-scripts` inside that release, then make the release files root-owned and readable by the service and Nginx.
-4. Run `sudo bash /opt/refract/releases/FULL_GIT_SHA/deploy/install-aws.sh FULL_GIT_SHA https://PUBLIC_HOST:8443`.
-5. Check `https://PUBLIC_HOST:8443/api/health` and `/register/`. Test Google and an email you control after adding the real provider credentials.
+4. Run `sudo bash /opt/refract/releases/FULL_GIT_SHA/deploy/install-aws.sh FULL_GIT_SHA https://refracthack.org`.
+5. Check `https://refracthack.org/api/health` and `/register/`. Check HTTP, `www`, and the old IP address redirect to the domain. Test Google and an email you control after adding the real provider credentials.
 
 The installer saves the previous Nginx config, backs up an existing SQLite database before migration, preserves credentials, and tests the local service before switching the website. Existing releases remain available for rollback. Never replace the live database with a development database.
 
