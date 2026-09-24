@@ -1,5 +1,14 @@
 (() => {
   const $ = selector => document.querySelector(selector);
+  const adminSignIn = new URLSearchParams(location.search).get('next') === 'admin';
+  const returnPath = adminSignIn ? '/register/?next=admin' : '/register/';
+  if (adminSignIn) {
+    document.title = 'Organizer sign-in — Refract';
+    $('#registration-title').textContent = 'Organizer sign-in.';
+    $('.registration-description').textContent = 'Sign in with your organizer account to view registrations.';
+    $('.registration-steps').hidden = true;
+    $('.registration-note').hidden = true;
+  }
   const views = ['start', 'verify', 'details', 'complete', 'recover'];
   const errorBox = $('#form-error');
   const notice = $('#service-notice');
@@ -145,6 +154,7 @@
   }
   function showAccount(data, focus = true) {
     clearPending();
+    if (adminSignIn) { window.location.replace('/admin/'); return; }
     document.querySelectorAll('.account-email').forEach(element => { element.textContent = data.user.email; });
     $('#full-name').value = data.registration?.name || (data.user.name !== data.user.email ? data.user.name : '') || '';
     $('#prisms-student').checked = Boolean(data.registration);
@@ -234,7 +244,7 @@
   };
   Object.entries(providers).forEach(([provider, details]) => {
     $(`#${provider}-sign-in`).addEventListener('click', event => busy(event.currentTarget, async () => {
-      const data = await api('/api/auth/sign-in/social', { provider, callbackURL: '/register/', errorCallbackURL: `/register/?error=${provider}`, disableRedirect: true });
+      const data = await api('/api/auth/sign-in/social', { provider, callbackURL: returnPath, errorCallbackURL: `${returnPath}${adminSignIn ? '&' : '?'}error=${provider}`, disableRedirect: true });
       const url = new URL(data.url);
       if (url.protocol !== 'https:' || url.hostname !== details.host || url.port || url.username || url.password || (details.path && url.pathname !== details.path)) {
         throw new Error(`Couldn’t open ${details.label} sign-in. Please try again.`);
@@ -263,7 +273,7 @@
   $('#edit-details').addEventListener('click', () => { clearError(); showView('details'); });
   document.querySelectorAll('.sign-out').forEach(button => button.addEventListener('click', () => busy(button, async () => {
     await api('/api/auth/sign-out', {});
-    clearPending(); window.location.replace('/register/');
+    clearPending(); window.location.replace(returnPath);
   }, 'Signing out…')));
   document.addEventListener('visibilitychange', () => { if (!document.hidden && pendingEmail) updateResend(); });
   async function initialize() {
@@ -298,7 +308,7 @@
         showError(new Error(signInErrors.includes('email_not_verified')
           ? 'Verify your email in GitHub’s settings, then try signing in again.'
           : 'Sign-in wasn’t completed. Please try again.'));
-        history.replaceState(null, '', '/register/');
+        history.replaceState(null, '', returnPath);
       }
     } catch (error) {
       config = { emailEnabled: false, googleEnabled: false, githubEnabled: false };

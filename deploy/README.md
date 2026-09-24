@@ -56,6 +56,14 @@ Edit `/etc/refract/refract.env` on the server with `sudoedit`, then run `sudo sy
 
 The domain and HTTPS connection do not activate GitHub, Google or Resend by themselves. Configure those accounts and their credentials separately, then test each sign-in method.
 
+## Organizer access
+
+The read-only dashboard is at `/admin/`. Add a comma-separated list of existing, verified account IDs to `ADMIN_USER_IDS` in `/etc/refract/refract.env`, then restart `refract`. An empty value grants nobody access. Find the intended account in the private SQLite `user` table by its verified email; use its immutable `id`, not its email address, and confirm the identity before granting access. Keep this configuration on the server, outside Git.
+
+The page reuses the normal GitHub or email sign-in and returns to the dashboard. Both list and CSV endpoints validate the session and allowlist on every request. Removing an ID and restarting revokes organizer access without deleting that person’s account or registration. Releases preserve this setting.
+
+The list contains submitted forms only. CSV export includes all matching results across pages and neutralizes spreadsheet formulas in participant input. Treat downloaded files as private participant data.
+
 ## Deploy a committed release
 
 1. Push the release to GitHub and archive the intended commit with `git archive` (do not copy `.env`, local databases or `node_modules`).

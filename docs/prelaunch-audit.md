@@ -135,3 +135,11 @@ Non-blocking improvements: reduce the approximately 489 KB SVG favicon payload, 
 4. Confirm how organizers will review pending records, who handles participant support, and the backup/restore and outage-notification arrangements.
 5. Run the Safari/iPhone and screen-reader smoke checks; repeat layout checks after final content changes.
 6. Run `npm run check`, `npm test`, and the Python configuration tests against the final commit. Deploy that commit, verify public health and static asset versions, then announce registration.
+
+## Organizer dashboard — September 24, 2026
+
+Added `/admin/` with a submitted-registration list, total, latest submission, name/email/reference search, sorting, pagination and filtered CSV export. Organizer sign-in uses the existing verified account flow; merely signing in does not create a registration.
+
+Access is denied unless the authenticated, verified user's immutable ID appears in the server's private `ADMIN_USER_IDS` setting. Both data endpoints enforce this check and return `Cache-Control: no-store`. Tests cover unauthenticated and ordinary-user denial, revoked sessions, unverified accounts, default-deny configuration, literal search, pagination and CSV formula protection. The full suite passes 29 Node tests and 5 deployment-helper tests.
+
+Local browser checks used an isolated in-memory database with 52 sample registrations: email sign-in returned to the dashboard, search and pagination worked, empty search disabled export, CSV export completed, and sign-out returned to organizer sign-in. The mobile layout at 390px had no page overflow; the table scrolls horizontally within its own region. No sample participants were added to the live database.

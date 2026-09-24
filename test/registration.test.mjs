@@ -389,3 +389,75 @@ test('a new GitHub participant can register, return to the same account and sign
   assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM user').get().count, 1);
   assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM registrations').get().count, 1);
 });
+
+function seedUser(f, id, email, name = 'Test participant') {
+  f.db.prepare('INSERT INTO user (id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,?,?)').run(id, name, email, Date.now(), Date.now());
+}
+async function organizerFixture(t) {
+  const f = await fixture(t, { config: { adminUserIds: ['organizer'] } });
+  seedUser(f, 'organizer', 'organizer@example.com');
+  await f.send('organizer@example.com');
+  f.adminCookie = (await f.verify('organizer@example.com', f.emails.at(-1).otp)).cookie;
+  return f;
+}
+test('admin data and CSV require a verified, allowlisted account and valid session', async t => {
+  const f = await organizerFixture(t);
+  for (const path of ['/api/admin/registrations', '/api/admin/registrations.csv']) {
+    assert.equal((await f.request(path)).status, 401);
+    assert.equal((await f.request(path, undefined, f.adminCookie)).status, 200);
+  }
+  await f.send('other@example.com');
+  const other = await f.verify('other@example.com', f.emails.at(-1).otp);
+  for (const path of ['/api/admin/registrations?role=admin&user_id=organizer', '/api/admin/registrations.csv']) {
+    const denied = await f.request(path, undefined, other.cookie);
+    assert.equal(denied.status, 403);
+    assert.equal(denied.data.registrations, undefined);
+  }
+  f.db.prepare('UPDATE user SET emailVerified = 0 WHERE id = ?').run('organizer');
+  assert.equal((await f.request('/api/admin/registrations', undefined, f.adminCookie)).status, 403);
+  f.db.prepare('UPDATE user SET emailVerified = 1 WHERE id = ?').run('organizer');
+  await f.request('/api/auth/sign-out', {}, f.adminCookie);
+  assert.equal((await f.request('/api/admin/registrations', undefined, f.adminCookie)).status, 401);
+});
+test('admin access defaults to nobody, including a signed-in account', async t => {
+  const f = await fixture(t);
+  await f.send('owner@example.com');
+  const user = await f.verify('owner@example.com', f.emails.at(-1).otp);
+  assert.equal((await f.request('/api/admin/registrations', undefined, user.cookie)).status, 403);
+});
+test('admin directory counts submitted registrations, paginates, and searches literal input', async t => {
+  const f = await organizerFixture(t);
+  for (let i = 0; i < 51; i++) {
+    seedUser(f, `participant-${i}`, `student${i}@example.com`);
+    f.db.prepare('INSERT INTO registrations VALUES(?,?,?,1,?,?,?)').run(`participant-${i}`, `RF-${String(i).padStart(8, '0')}`, i === 0 ? 'Avery %_ Special' : `Participant ${i}`, 'pending', new Date(1700000000000 + i * 1000).toISOString(), new Date().toISOString());
+  }
+  const get = query => f.request(`/api/admin/registrations${query}`, undefined, f.adminCookie);
+  const first = await get('');
+  assert.equal(first.data.summary.total, 51, 'organizer who only signed in is excluded');
+  assert.equal(first.data.registrations.length, 50);
+  assert.equal(first.data.registrations[0].email, 'student50@example.com');
+  assert.equal(first.headers.get('cache-control'), 'no-store');
+  const last = await get('?page=9999');
+  assert.equal(last.data.page, 2); assert.equal(last.data.registrations.length, 1);
+  assert.equal((await get('?q=AVERY')).data.matched, 1);
+  assert.equal((await get('?q=%25_')).data.matched, 1);
+  assert.equal((await get('?q=%27%20OR%201%3D1--')).data.matched, 0);
+  assert.equal((await get('?sort=oldest')).data.registrations[0].email, 'student0@example.com');
+  assert.equal((await get('?sort=name')).data.registrations[0].name, 'Avery %_ Special');
+  for (const query of ['?page=0', '?page=-1', '?page=1&page=2', '?sort=DROP', '?q=a&q=b']) assert.equal((await get(query)).status, 400);
+  const csv = await f.request('/api/admin/registrations.csv', undefined, f.adminCookie);
+  assert.equal(csv.status, 200);
+  assert.equal(csv.data.trim().split('\r\n').length, 52, 'export includes all pages');
+  assert.match(csv.headers.get('content-disposition'), /attachment/);
+  assert.equal(csv.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(Object.keys(first.data.registrations[0]).sort(), ['createdAt','email','name','reference','status','studentConfirmed','updatedAt'].sort());
+});
+test('CSV quotes participant content and prevents spreadsheet formula execution', async t => {
+  const f = await organizerFixture(t);
+  seedUser(f, 'csv-user', 'csv@example.com');
+  f.db.prepare('INSERT INTO registrations VALUES(?,?,?,1,?,?,?)').run('csv-user', 'RF-12345678', '  =SUM(1,2)\n"name"', 'pending', new Date().toISOString(), new Date().toISOString());
+  const csv = await f.request('/api/admin/registrations.csv?q=csv%40', undefined, f.adminCookie);
+  assert.equal(csv.status, 200);
+  assert.ok(csv.data.includes('"\'  =SUM(1,2)\n""name"""'));
+  assert.ok(csv.data.includes('csv@example.com'));
+});

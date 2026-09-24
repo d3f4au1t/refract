@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#080b0e">
+  <title>Registrations — Refract</title>
+  <link rel="icon" href="/assets/favicon-rounded.svg?v=1" type="image/svg+xml">
+  <link rel="stylesheet" href="/admin/admin.css?v=1">
+  <script defer src="/admin/admin.js?v=1"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to registrations</a>
+  <header><a class="brand" href="/" aria-label="Refract home"><span class="symbol" aria-hidden="true"></span>REFRACT <span class="tag">ORGANIZERS</span></a><nav aria-label="Admin navigation"><a href="/">View website <span aria-hidden="true">↗</span></a><button id="sign-out" hidden>Sign out</button></nav></header>
+  <main id="main" tabindex="-1">
+    <section id="gate" class="gate" aria-labelledby="gate-title"><p class="eyebrow">REFRACT / ADMIN</p><h1 id="gate-title">Registrations.</h1><p id="gate-message" role="status">Checking your access…</p><a id="sign-in" class="button primary" href="/register/?next=admin" hidden>Organizer sign-in <span aria-hidden="true">↗</span></a><button id="switch-account" class="button" hidden>Use another account</button></section>
+    <div id="dashboard" hidden>
+      <div class="page-heading"><div><p class="eyebrow">REFRACT / ADMIN</p><h1>Registrations<span class="accent">.</span></h1><p class="intro">Everyone who has submitted the registration form.</p></div><div class="account"><span class="live-dot" aria-hidden="true"></span><span id="account-email"></span></div></div>
+      <section class="summary" aria-label="Registration summary"><div><span class="stat-label">Total registrations</span><strong id="total">0</strong></div><div><span class="stat-label">Latest registration</span><strong id="latest" class="date">—</strong></div><div class="summary-note">Signing in alone doesn’t add someone to this list. A registration appears after they submit their details.</div></section>
+      <div class="toolbar"><div class="search"><label for="search">Find a registration</label><input id="search" type="search" maxlength="100" placeholder="Name, email or reference" autocomplete="off"></div><div class="sort"><label for="sort">Sort by</label><select id="sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name A–Z</option></select></div><button class="button" id="refresh">Refresh <span aria-hidden="true">↻</span></button><button class="button primary" id="export">Export CSV <span aria-hidden="true">↓</span></button></div>
+      <div class="list-heading"><h2>Participant list</h2><p id="results" role="status" aria-live="polite"></p></div>
+      <div class="table-wrap" id="table-wrap" tabindex="0" role="region" aria-label="Participant registrations"><table><caption class="sr-only">Submitted Refract registrations</caption><thead><tr><th scope="col">Participant</th><th scope="col">Reference</th><th scope="col">Registered</th><th scope="col">Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div id="empty" class="empty" hidden><span aria-hidden="true">↗</span><h2 id="empty-title">No registrations yet.</h2><p id="empty-text">Completed registrations will appear here.</p></div>
+      <div class="pagination"><span id="page-info"></span><div><button id="previous" class="button">← Previous</button><button id="next" class="button">Next →</button></div></div>
+      <p class="footnote">“Received” means the form was submitted. It does not confirm an event place. Dates use your local time.</p>
+    </div>
+    <div id="error" class="error" role="alert" hidden><span id="error-text"></span><button id="retry" class="button">Try again</button></div>
+  </main>
+</body>
+</html>

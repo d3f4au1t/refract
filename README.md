@@ -33,6 +33,7 @@ Open [localhost:3001](http://localhost:3001). You can work on the event page wit
 | `dist/timeline.css` | Schedule layout |
 | `dist/teams.js`, `dist/teams.css` | The 60-person team animation |
 | `dist/register/` | Registration forms and their browser code |
+| `dist/admin/` | Private organizer dashboard |
 | `dist/assets/` | Logos, artwork and fonts |
 | `server/` | Sign-in, email delivery and registration storage |
 | `test/` | API and configuration tests |
@@ -45,6 +46,12 @@ The background logo stays fixed while the glass panel scrolls over it. The light
 Registration has its own page at `/register/`. Participants verify their email, enter their name and confirm that they attend PRISMS. Each account gets one pending registration with a reference number. Editing the name keeps the same reference; registering does not automatically approve an event place.
 
 GitHub and Google sign-in need OAuth credentials. Email verification needs a Resend key and a verified sender. See [AWS setup](deploy/README.md) for configuration, deployment and backups. Keep credentials in `.env` locally or the private environment file on the server.
+
+## Organizer dashboard
+
+Open `/admin/` and sign in with an authorized organizer account. The page lists submitted registrations with names, emails, references and dates. Search, sort, or export the matching results as CSV. Signing in without submitting the registration form does not add a person to the list.
+
+Access is controlled on the server through `ADMIN_USER_IDS`; it is denied by default. Ordinary participants cannot retrieve the list or CSV, even if they open the admin URL. See [AWS setup](deploy/README.md#organizer-access) to configure access.
 
 ## Before launch
 

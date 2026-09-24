@@ -15,6 +15,7 @@ export function readConfig(env = process.env) {
   const googleHostAllowed = !isIP(hostname) || ['127.0.0.1', '::1'].includes(hostname);
   return {
     production, port, host: env.HOST || '127.0.0.1', baseURL: url.origin,
+    adminUserIds: (env.ADMIN_USER_IDS || '').split(',').map(id => id.trim()).filter(Boolean),
     secret: env.BETTER_AUTH_SECRET,
     databasePath: resolve(env.DATABASE_PATH || '.data/refract.sqlite'),
     githubClientId: env.GITHUB_CLIENT_ID || '',

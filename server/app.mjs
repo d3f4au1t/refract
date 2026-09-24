@@ -11,6 +11,7 @@ import { emailOTP } from 'better-auth/plugins';
 import { getMigrations } from 'better-auth/db/migration';
 import { toNodeHandler, fromNodeHeaders } from 'better-auth/node';
 import { createEmailSender } from './email.mjs';
+import { installAdminRoutes } from './admin.mjs';
 
 const staticRoot = fileURLToPath(new URL('../dist', import.meta.url));
 const authPaths = new Set(['/get-session', '/sign-in/social', '/callback/google', '/callback/github', '/email-otp/send-verification-otp', '/sign-in/email-otp', '/sign-out', '/ok', '/error']);
@@ -142,6 +143,7 @@ export async function createApp(config, overrides = {}) {
     req.user = session.user;
     next();
   };
+  installAdminRoutes(app, { db, requireUser, adminUserIds: config.adminUserIds });
   const registrationFor = userId => db.prepare('SELECT reference, name, status, created_at AS createdAt FROM registrations WHERE user_id = ?').get(userId) || null;
   app.get('/api/registration', requireUser, (req, res) => {
     res.json({ user: { name: req.user.name, email: req.user.email }, registration: registrationFor(req.user.id) });

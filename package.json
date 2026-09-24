@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env server/index.mjs",
     "start": "node --env-file-if-exists=.env server/index.mjs",
-    "check": "node --check dist/app.js && node --check dist/teams.js && node --check dist/register/register.js && node --check server/app.mjs && node --check server/index.mjs",
+    "check": "node --check dist/app.js && node --check dist/teams.js && node --check dist/register/register.js && node --check server/app.mjs && node --check server/index.mjs && node --check server/admin.mjs && node --check dist/admin/admin.js",
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
