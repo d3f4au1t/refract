@@ -34,9 +34,12 @@ async function fixture(t, options = {}) {
 
 test('unconfigured providers fail honestly and cannot create an account', async t => {
   const f = await fixture(t, { unavailable: true });
-  assert.deepEqual((await f.request('/api/registration/config')).data, { googleEnabled: false, emailEnabled: false });
+  assert.deepEqual((await f.request('/api/registration/config')).data, { googleEnabled: false, githubEnabled: false, emailEnabled: false });
   assert.equal((await f.send('student@example.com')).status, 503);
   assert.equal((await f.request('/api/auth/sign-in/social', { provider: 'google', callbackURL: '/register/' })).status, 503);
+  const github = await f.request('/api/auth/sign-in/social', { provider: 'github', callbackURL: '/register/' });
+  assert.equal(github.status, 503);
+  assert.equal(github.data.code, 'GITHUB_UNAVAILABLE');
   assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM user').get().count, 0);
   assert.equal((await f.request('/api/registration')).status, 401);
 });
@@ -275,4 +278,114 @@ test('a SQLite backup restores registrations and sessions in a fresh service', a
     assert.equal(registration.name, 'Restore Student');
     assert.equal(registration.status, 'pending');
   } finally { restored.close(); rmSync(directory, { recursive: true, force: true }); }
+});
+
+const githubConfig = { githubClientId: 'test-github-client', githubClientSecret: 'test-github-secret' };
+
+// Mock only GitHub's network responses; exercise the real OAuth state, token
+// exchange, profile mapping, cookies, database and registration endpoints.
+function mockGitHub(t, { verified = true, email = 'github-student@example.com' } = {}) {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  t.mock.method(globalThis, 'fetch', async (input, init) => {
+    const url = new URL(input instanceof Request ? input.url : input);
+    if (!['github.com', 'api.github.com'].includes(url.hostname)) return originalFetch(input, init);
+    calls.push(url.href);
+    if (url.href === 'https://github.com/login/oauth/access_token') {
+      assert.match(String(init.body), /code=test-code/);
+      return Response.json({ access_token: 'test-only-github-token', token_type: 'bearer', scope: 'read:user,user:email' });
+    }
+    if (url.href === 'https://api.github.com/user') return Response.json({ id: 12345, login: 'test-student', name: 'GitHub Student', email: null, avatar_url: 'https://avatars.githubusercontent.com/u/12345' });
+    if (url.href === 'https://api.github.com/user/emails') return Response.json([{ email, verified, primary: true }]);
+    throw new Error('Unexpected GitHub request');
+  });
+  return calls;
+}
+
+async function githubStart(f) {
+  return f.request('/api/auth/sign-in/social', { provider: 'github', callbackURL: '/register/', errorCallbackURL: '/register/?error=github', disableRedirect: true });
+}
+
+test('GitHub works independently, uses limited scopes and protects callbacks', async t => {
+  const f = await fixture(t, { unavailable: true, config: githubConfig });
+  assert.deepEqual((await f.request('/api/registration/config')).data, { googleEnabled: false, githubEnabled: true, emailEnabled: false });
+  const start = await githubStart(f);
+  assert.equal(start.status, 200);
+  const url = new URL(start.data.url);
+  assert.equal(url.origin + url.pathname, 'https://github.com/login/oauth/authorize');
+  assert.equal(url.searchParams.get('redirect_uri'), 'http://localhost:3001/api/auth/callback/github');
+  assert.deepEqual(url.searchParams.get('scope').split(' ').sort(), ['read:user', 'user:email']);
+  assert.ok(url.searchParams.get('state'));
+  assert.ok(url.searchParams.get('code_challenge'));
+  assert.ok(start.cookie);
+  for (const body of [{ provider: 'github', callbackURL: 'https://attacker.example' }, { provider: 'github', errorCallbackURL: 'https://attacker.example' }]) {
+    assert.equal((await f.request('/api/auth/sign-in/social', body)).status, 403);
+  }
+  const extra = await fixture(t, { unavailable: true, config: githubConfig });
+  assert.equal((await extra.request('/api/auth/sign-in/social', { provider: 'github', scopes: ['repo'] })).status, 400);
+  assert.equal((await extra.request('/api/auth/sign-in/social', { provider: 'discord' })).status, 400);
+  const denied = await f.request(`/api/auth/callback/github?error=access_denied&state=${url.searchParams.get('state')}`, undefined, start.cookie);
+  assert.equal(denied.status, 302);
+  assert.ok(denied.headers.get('location').includes('/register/?error='));
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM session').get().count, 0);
+});
+
+test('GitHub private verified email completes registration and links an existing email account', async t => {
+  const calls = mockGitHub(t);
+  const f = await fixture(t, { config: githubConfig });
+  await f.send('github-student@example.com');
+  const emailSession = await f.verify('github-student@example.com', f.emails[0].otp);
+  const saved = await f.request('/api/registration', { name: 'Existing Student', student: true }, emailSession.cookie);
+  await f.request('/api/auth/sign-out', {}, emailSession.cookie);
+  const start = await githubStart(f);
+  const state = new URL(start.data.url).searchParams.get('state');
+  const callback = await f.request(`/api/auth/callback/github?code=test-code&state=${state}`, undefined, start.cookie);
+  assert.equal(callback.status, 302);
+  assert.equal(new URL(callback.headers.get('location'), f.config.baseURL).href, 'http://localhost:3001/register/');
+  assert.match(callback.cookie, /refract.session_token=/);
+  const account = await f.request('/api/registration', undefined, callback.cookie);
+  assert.equal(account.status, 200);
+  assert.equal(account.data.user.email, 'github-student@example.com');
+  assert.equal(account.data.registration.reference, saved.data.registration.reference);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM user').get().count, 1);
+  assert.notEqual(f.db.prepare("SELECT accessToken FROM account WHERE providerId = 'github'").get().accessToken, 'test-only-github-token');
+  assert.equal(calls.length, 3);
+  await f.request('/api/auth/callback/github?code=test-code&state=forged', undefined, start.cookie);
+  assert.equal(calls.length, 3, 'invalid state must never exchange a token');
+});
+
+test('GitHub cannot register with an unverified email address', async t => {
+  mockGitHub(t, { verified: false });
+  const f = await fixture(t, { unavailable: true, config: githubConfig });
+  const start = await githubStart(f);
+  const state = new URL(start.data.url).searchParams.get('state');
+  const callback = await f.request(`/api/auth/callback/github?code=test-code&state=${state}`, undefined, start.cookie);
+  assert.equal(callback.status, 302);
+  assert.notEqual((await f.request('/api/registration', { name: 'Unverified Student', student: true }, callback.cookie)).status, 200);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM registrations').get().count, 0);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM session').get().count, 0);
+});
+
+
+test('a new GitHub participant can register, return to the same account and sign out', async t => {
+  mockGitHub(t);
+  const f = await fixture(t, { unavailable: true, config: githubConfig });
+  const login = async () => {
+    const start = await githubStart(f);
+    const state = new URL(start.data.url).searchParams.get('state');
+    return f.request(`/api/auth/callback/github?code=test-code&state=${state}`, undefined, start.cookie);
+  };
+  const first = await login();
+  assert.equal(first.status, 302);
+  assert.equal((await f.request('/api/registration', undefined, first.cookie)).data.registration, null);
+  const saved = await f.request('/api/registration', { name: 'GitHub Student', student: true }, first.cookie);
+  assert.equal(saved.status, 200);
+  assert.equal(saved.data.registration.status, 'pending');
+  assert.equal((await f.request('/api/auth/sign-out', {}, first.cookie)).status, 200);
+  assert.equal((await f.request('/api/registration', undefined, first.cookie)).status, 401);
+  const second = await login();
+  const account = await f.request('/api/registration', undefined, second.cookie);
+  assert.equal(account.data.registration.reference, saved.data.registration.reference);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM user').get().count, 1);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS count FROM registrations').get().count, 1);
 });

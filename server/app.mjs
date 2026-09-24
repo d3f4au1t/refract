@@ -13,7 +13,7 @@ import { toNodeHandler, fromNodeHeaders } from 'better-auth/node';
 import { createEmailSender } from './email.mjs';
 
 const staticRoot = fileURLToPath(new URL('../dist', import.meta.url));
-const authPaths = new Set(['/get-session', '/sign-in/social', '/callback/google', '/email-otp/send-verification-otp', '/sign-in/email-otp', '/sign-out', '/ok', '/error']);
+const authPaths = new Set(['/get-session', '/sign-in/social', '/callback/google', '/callback/github', '/email-otp/send-verification-otp', '/sign-in/email-otp', '/sign-out', '/ok', '/error']);
 const normalizeEmail = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
 const validEmail = email => email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -23,6 +23,7 @@ export async function createApp(config, overrides = {}) {
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
   const sendEmail = Object.hasOwn(overrides, 'sendEmail') ? overrides.sendEmail : createEmailSender(config);
   const googleEnabled = Boolean(config.googleClientId && config.googleClientSecret);
+  const githubEnabled = Boolean(config.githubClientId && config.githubClientSecret);
   const emailEnabled = typeof sendEmail === 'function';
   const deliveryContext = new AsyncLocalStorage();
   db.exec(`CREATE TABLE IF NOT EXISTS email_cooldown (
@@ -47,7 +48,10 @@ export async function createApp(config, overrides = {}) {
   const auth = betterAuth({
     appName: 'Refract', baseURL: config.baseURL, secret: config.secret, database: db,
     trustedOrigins: [config.baseURL],
-    socialProviders: googleEnabled ? { google: { clientId: config.googleClientId, clientSecret: config.googleClientSecret, prompt: 'select_account' } } : {},
+    socialProviders: {
+      ...(googleEnabled ? { google: { clientId: config.googleClientId, clientSecret: config.googleClientSecret, prompt: 'select_account' } } : {}),
+      ...(githubEnabled ? { github: { clientId: config.githubClientId, clientSecret: config.githubClientSecret, requireEmailVerification: true } } : {}),
+    },
     emailAndPassword: { enabled: false },
     session: { expiresIn: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24, cookieCache: { enabled: false } },
     account: { encryptOAuthTokens: true },
@@ -68,8 +72,14 @@ export async function createApp(config, overrides = {}) {
           // Reserve before generating a code: a throttled request must not invalidate the previous code.
           claimEmailSend(email);
         }
-        if (ctx.path === '/sign-in/social' && (!googleEnabled || ctx.body?.provider !== 'google')) {
-          throw new APIError('SERVICE_UNAVAILABLE', { code: 'GOOGLE_UNAVAILABLE', message: 'Google sign-in is not available yet.' });
+        if (ctx.path === '/sign-in/social') {
+          const provider = ctx.body?.provider;
+          if (!['google', 'github'].includes(provider)) throw new APIError('BAD_REQUEST', { code: 'INVALID_PROVIDER', message: 'Choose a supported sign-in method.' });
+          if (!(provider === 'google' ? googleEnabled : githubEnabled)) {
+            throw new APIError('SERVICE_UNAVAILABLE', { code: `${provider.toUpperCase()}_UNAVAILABLE`, message: 'This sign-in method is not available yet.' });
+          }
+          // The client cannot request extra access beyond basic profile and email.
+          if (ctx.body.scopes?.length) throw new APIError('BAD_REQUEST', { code: 'INVALID_SCOPE', message: 'Additional permissions are not supported.' });
         }
       }),
     },
@@ -118,7 +128,7 @@ export async function createApp(config, overrides = {}) {
     next();
   });
   app.get('/api/health', (_req, res) => res.json({ ok: true }));
-  app.get('/api/registration/config', (_req, res) => res.json({ googleEnabled, emailEnabled }));
+  app.get('/api/registration/config', (_req, res) => res.json({ googleEnabled, githubEnabled, emailEnabled }));
   app.all('/api/auth/*splat', (req, res, next) => {
     const path = req.path.slice('/api/auth'.length);
     if (!authPaths.has(path)) return res.status(404).json({ message: 'Not found.' });

@@ -17,6 +17,13 @@ class ConfigureAuthTests(unittest.TestCase):
         self.assertEqual(updated.count('RESEND_API_KEY='), 1)
         self.assertIn('RESEND_FROM_EMAIL="Refract <hello@example.com>"', updated)
 
+    def test_github_preserves_other_providers(self):
+        original = 'BETTER_AUTH_SECRET=keep\nGOOGLE_CLIENT_ID=google\nRESEND_API_KEY=re_keep\n'
+        updated = setup.updated_config(original, {'GITHUB_CLIENT_ID': 'Ov23liExample', 'GITHUB_CLIENT_SECRET': 'example-secret'})
+        self.assertTrue(updated.startswith(original))
+        self.assertIn('GITHUB_CLIENT_ID="Ov23liExample"', updated)
+        self.assertIn('GITHUB_CLIENT_SECRET="example-secret"', updated)
+
     def test_injection_and_unrelated_changes_are_rejected(self):
         for updates in [{'BETTER_AUTH_SECRET': 'replace'}, {'RESEND_API_KEY': 'key\nNODE_ENV=development'}, {'RESEND_API_KEY': ''}, {'RESEND_FROM_EMAIL': '"quoted"'}]:
             with self.assertRaises(ValueError):

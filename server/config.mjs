@@ -17,6 +17,8 @@ export function readConfig(env = process.env) {
     production, port, host: env.HOST || '127.0.0.1', baseURL: url.origin,
     secret: env.BETTER_AUTH_SECRET,
     databasePath: resolve(env.DATABASE_PATH || '.data/refract.sqlite'),
+    githubClientId: env.GITHUB_CLIENT_ID || '',
+    githubClientSecret: env.GITHUB_CLIENT_SECRET || '',
     resendKey: env.RESEND_API_KEY || '', sender: env.RESEND_FROM_EMAIL || '',
     googleClientId: googleHostAllowed ? env.GOOGLE_CLIENT_ID || '' : '',
     googleClientSecret: googleHostAllowed ? env.GOOGLE_CLIENT_SECRET || '' : '',

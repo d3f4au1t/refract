@@ -15,7 +15,7 @@ from urllib.parse import urlsplit
 from urllib.request import urlopen
 
 CONFIG = Path('/etc/refract/refract.env')
-PROVIDER_KEYS = {'RESEND_API_KEY', 'RESEND_FROM_EMAIL', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'}
+PROVIDER_KEYS = {'RESEND_API_KEY', 'RESEND_FROM_EMAIL', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET'}
 
 
 def read_config(path):
@@ -93,7 +93,7 @@ def healthy(expected):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['status', 'resend', 'google'], nargs='?', default='status')
+    parser.add_argument('action', choices=['status', 'resend', 'google', 'github'], nargs='?', default='status')
     args = parser.parse_args()
     if os.geteuid() != 0:
         raise ValueError('Run this helper with sudo on the AWS server.')
@@ -104,13 +104,14 @@ def main():
     print('Website:', config.get('BETTER_AUTH_URL', '(not configured)'))
     print('Resend credentials:', 'present' if config.get('RESEND_API_KEY') and config.get('RESEND_FROM_EMAIL') else 'missing')
     print('Google credentials:', 'present' if config.get('GOOGLE_CLIENT_ID') and config.get('GOOGLE_CLIENT_SECRET') else 'missing')
+    print('GitHub credentials:', 'present' if config.get('GITHUB_CLIENT_ID') and config.get('GITHUB_CLIENT_SECRET') else 'missing')
     print('Domain for Google:', 'configured' if domain else 'a public HTTPS domain is still needed')
     if args.action == 'status':
         return
     if not sys.stdin.isatty():
         raise ValueError('Use an interactive SSH terminal. Do not put keys in command arguments.')
-    if args.action == 'google' and not domain:
-        raise ValueError('Connect your domain and HTTPS certificate before adding Google credentials.')
+    if args.action in {'google', 'github'} and not domain:
+        raise ValueError('Connect your domain and HTTPS certificate before adding sign-in credentials.')
     if args.action == 'resend':
         print('Use a sending key and an address on a domain you have verified in Resend.')
         key = getpass.getpass('Resend API key (hidden): ').strip()
@@ -120,17 +121,25 @@ def main():
         if not re.fullmatch(r'[A-Za-z0-9.!#$%&*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', sender) or len(sender) > 254:
             raise ValueError('Enter a plain sender email address. Nothing was changed.')
         updates = {'RESEND_API_KEY': key, 'RESEND_FROM_EMAIL': f'Refract <{sender}>'}
-    else:
+    elif args.action == 'google':
         print('Google callback:', config['BETTER_AUTH_URL'] + '/api/auth/callback/google')
         client = input('Google Web application client ID: ').strip()
         secret = getpass.getpass('Google client secret (hidden): ').strip()
         if not re.fullmatch(r'[A-Za-z0-9_-]+\.apps\.googleusercontent\.com', client) or not re.fullmatch(r'[A-Za-z0-9_.-]+', secret):
             raise ValueError('The Google credential format is invalid. Nothing was changed.')
         updates = {'GOOGLE_CLIENT_ID': client, 'GOOGLE_CLIENT_SECRET': secret}
+    else:
+        print('GitHub callback:', config['BETTER_AUTH_URL'] + '/api/auth/callback/github')
+        client = input('GitHub OAuth app client ID: ').strip()
+        secret = getpass.getpass('GitHub client secret (hidden): ').strip()
+        if not re.fullmatch(r'[A-Za-z0-9_.-]+', client) or not re.fullmatch(r'[A-Za-z0-9_-]+', secret):
+            raise ValueError('The GitHub credential format is invalid. Nothing was changed.')
+        updates = {'GITHUB_CLIENT_ID': client, 'GITHUB_CLIENT_SECRET': secret}
     original = CONFIG.read_text()
     replacement = updated_config(original, updates)
     combined = {**config, **updates}
     expected = {
+        'githubEnabled': bool(combined.get('GITHUB_CLIENT_ID') and combined.get('GITHUB_CLIENT_SECRET')),
         'emailEnabled': bool(combined.get('RESEND_API_KEY') and combined.get('RESEND_FROM_EMAIL')),
         'googleEnabled': bool(domain and combined.get('GOOGLE_CLIENT_ID') and combined.get('GOOGLE_CLIENT_SECRET')),
     }

@@ -1,6 +1,6 @@
 # AWS registration service
 
-Refract is served at [refracthack.org](https://refracthack.org). Nginx serves `dist/` over HTTPS on port 443; `/api/` proxies to the Node service on `127.0.0.1:3001`. The service runs as the dedicated `refract` user. Node 24 is installed from Amazon Linux's repository. Google and Resend are disabled independently until their configuration is present. No placeholder login or test-code endpoint is deployed.
+Refract is served at [refracthack.org](https://refracthack.org). Nginx serves `dist/` over HTTPS on port 443; `/api/` proxies to the Node service on `127.0.0.1:3001`. The service runs as the dedicated `refract` user. Node 24 is installed from Amazon Linux's repository. GitHub, Google and Resend are disabled independently until their configuration is present. No placeholder login or test-code endpoint is deployed.
 
 ## Public ports
 
@@ -32,11 +32,14 @@ The private setup helper avoids putting keys in chat, Git, shell history, or com
 sudo python3 /opt/refract/current/deploy/configure-auth.py status
 sudo python3 /opt/refract/current/deploy/configure-auth.py resend
 sudo python3 /opt/refract/current/deploy/configure-auth.py google
+sudo python3 /opt/refract/current/deploy/configure-auth.py github
 ```
 
-Secret prompts are hidden. The helper writes the root-only environment file atomically, preserves the signing secret and database settings, restarts the application, checks its health, and restores the old configuration if startup fails. It does not send email or validate the credentials with Google/Resend; complete a real sign-in after setup. Google setup stays blocked until the site's HTTPS domain is configured. Run the helper's tests with `python3 -m unittest discover -s test -p '*_test.py'`.
+Secret prompts are hidden. The helper writes the root-only environment file atomically, preserves the signing secret and database settings, restarts the application, checks its health, and restores the old configuration if startup fails. It does not send email or validate the credentials with GitHub/Google/Resend; complete a real sign-in after setup. Social sign-in setup stays blocked until the site's HTTPS domain is configured. Run the helper's tests with `python3 -m unittest discover -s test -p '*_test.py'`.
 
 Create a [Resend sending key](https://resend.com/api-keys) after [verifying the sender domain](https://resend.com/domains). Create a Google **Web application** OAuth client in [Google Auth Platform](https://console.cloud.google.com/auth/clients), with the callback below and only basic profile/email scopes. If Google is in testing mode, add your test accounts before trying sign-in.
+
+Create a [GitHub OAuth app](https://github.com/settings/applications/new) named **Refract**, with homepage `https://refracthack.org` and callback `https://refracthack.org/api/auth/callback/github`. Leave device authorization disabled. The app requests only `read:user` and `user:email`; repository access is not needed. Generate a client secret and enter it through the private setup helper. Use a separate OAuth app with `http://localhost:3001/api/auth/callback/github` for local development.
 
 Edit `/etc/refract/refract.env` on the server with `sudoedit`, then run `sudo systemctl restart refract`. This file is root-only and outside the release directory. Never commit it.
 
@@ -44,9 +47,10 @@ Edit `/etc/refract/refract.env` on the server with `sudoedit`, then run `sudo sy
 - `BETTER_AUTH_SECRET`: generated once during installation. Preserve it between deployments.
 - `RESEND_API_KEY`: a sending key from your Resend account.
 - `RESEND_FROM_EMAIL`: `Refract <registration@refracthack.org>` after verifying `refracthack.org` in Resend. Add the DNS records Resend supplies in Namecheap. A test sender cannot email arbitrary participants.
+- `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`: the GitHub OAuth app credentials. GitHub must provide a verified email address; private primary emails are supported.
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: a Google OAuth **Web application**. Set the JavaScript origin to `https://refracthack.org` and authorize `https://refracthack.org/api/auth/callback/google` as the redirect URI. Local development uses `http://localhost:3001/api/auth/callback/google`.
 
-The domain and HTTPS connection do not activate Google or Resend by themselves. Configure those accounts and their credentials separately, then test each sign-in method.
+The domain and HTTPS connection do not activate GitHub, Google or Resend by themselves. Configure those accounts and their credentials separately, then test each sign-in method.
 
 ## Deploy a committed release
 
@@ -54,7 +58,7 @@ The domain and HTTPS connection do not activate Google or Resend by themselves. 
 2. Extract it to `/opt/refract/releases/FULL_GIT_SHA` on AWS.
 3. Run `npm ci --omit=dev --ignore-scripts` inside that release, then make the release files root-owned and readable by the service and Nginx.
 4. Run `sudo bash /opt/refract/releases/FULL_GIT_SHA/deploy/install-aws.sh FULL_GIT_SHA https://refracthack.org`.
-5. Check `https://refracthack.org/api/health` and `/register/`. Check HTTP, `www`, and the old IP address redirect to the domain. Test Google and an email you control after adding the real provider credentials.
+5. Check `https://refracthack.org/api/health` and `/register/`. Check HTTP, `www`, and the old IP address redirect to the domain. Test GitHub, Google and an email you control after adding the real provider credentials.
 
 The installer saves the previous Nginx config, backs up an existing SQLite database before migration, preserves credentials, and tests the local service before switching the website. Existing releases remain available for rollback. Never replace the live database with a development database.
 
@@ -69,7 +73,7 @@ The installer saves the previous Nginx config, backs up an existing SQLite datab
 - `GET /api/registration/config` returns provider availability, never secrets.
 - Registrations are unique per verified user and remain `pending`; creating an account does not confirm an event place.
 
-The browser never receives the Resend API key, Google secret, signing secret, or database files. Nginx replaces forwarded IP headers; the app must stay bound to loopback. Verification emails contain only a code, not a link that can be consumed by an email scanner.
+The browser never receives the Resend API key, GitHub or Google secret, signing secret, or database files. Nginx replaces forwarded IP headers; the app must stay bound to loopback. Verification emails contain only a code, not a link that can be consumed by an email scanner.
 
 ## Backups
 

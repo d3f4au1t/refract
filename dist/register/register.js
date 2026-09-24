@@ -5,7 +5,7 @@
   const notice = $('#service-notice');
   const retryButton = $('#retry-connection');
   const requestStatus = $('#request-status');
-  let config = { emailEnabled: false, googleEnabled: false };
+  let config = { emailEnabled: false, googleEnabled: false, githubEnabled: false };
   let pendingEmail = '';
   let resendAt = 0;
   let expiresAt = 0;
@@ -19,7 +19,8 @@
     TOO_MANY_ATTEMPTS: 'Too many incorrect attempts. Request a new code below.',
     EMAIL_COOLDOWN: 'Please wait before requesting another code.',
     EMAIL_UNAVAILABLE: 'Email registration isn’t available yet. Please check back soon.',
-    GOOGLE_UNAVAILABLE: 'Google sign-in isn’t available yet. You can use email when it’s available.',
+    GOOGLE_UNAVAILABLE: 'Google sign-in is unavailable. Please choose another option.',
+    GITHUB_UNAVAILABLE: 'GitHub sign-in is unavailable. Please choose another option.',
     EMAIL_DELIVERY_FAILED: 'We couldn’t send your code. Please try again in a minute.',
     SIGN_IN_REQUIRED: 'Your session has ended. Please verify your email again.',
     EMAIL_NOT_VERIFIED: 'Please verify your email before registering.',
@@ -91,6 +92,7 @@
   }
   function updateControls() {
     document.querySelectorAll('.registration-panel button, .registration-panel input').forEach(control => { control.disabled = requestInFlight; });
+    $('#github-sign-in').disabled = requestInFlight || !config.githubEnabled;
     $('#google-sign-in').disabled = requestInFlight || !config.googleEnabled;
     $('#email').disabled = requestInFlight || !config.emailEnabled;
     $('#email-form button').disabled = requestInFlight || !config.emailEnabled;
@@ -226,12 +228,20 @@
     $('#code').value = '';
     clearError(); showView('start', false); updateControls(); $('#email').focus();
   });
-  $('#google-sign-in').addEventListener('click', event => busy(event.currentTarget, async () => {
-    const data = await api('/api/auth/sign-in/social', { provider: 'google', callbackURL: '/register/', errorCallbackURL: '/register/?error=google', disableRedirect: true });
-    const url = new URL(data.url);
-    if (url.protocol !== 'https:' || url.hostname !== 'accounts.google.com') throw new Error('Couldn’t open Google sign-in. Please try again.');
-    window.location.assign(url.href);
-  }, 'Opening Google sign-in…'));
+  const providers = {
+    github: { label: 'GitHub', host: 'github.com', path: '/login/oauth/authorize' },
+    google: { label: 'Google', host: 'accounts.google.com' },
+  };
+  Object.entries(providers).forEach(([provider, details]) => {
+    $(`#${provider}-sign-in`).addEventListener('click', event => busy(event.currentTarget, async () => {
+      const data = await api('/api/auth/sign-in/social', { provider, callbackURL: '/register/', errorCallbackURL: `/register/?error=${provider}`, disableRedirect: true });
+      const url = new URL(data.url);
+      if (url.protocol !== 'https:' || url.hostname !== details.host || url.port || url.username || url.password || (details.path && url.pathname !== details.path)) {
+        throw new Error(`Couldn’t open ${details.label} sign-in. Please try again.`);
+      }
+      window.location.assign(url.href);
+    }, `Opening ${details.label} sign-in…`));
+  });
   const fullName = $('#full-name');
   fullName.addEventListener('input', () => {
     fullName.setCustomValidity('');
@@ -267,10 +277,10 @@
       config = await api('/api/registration/config');
       notice.textContent = '';
       notice.hidden = true;
-      if (!config.googleEnabled || !config.emailEnabled) {
-        notice.textContent = !config.googleEnabled && !config.emailEnabled
+      if (!config.googleEnabled || !config.githubEnabled || !config.emailEnabled) {
+        notice.textContent = !config.googleEnabled && !config.githubEnabled && !config.emailEnabled
           ? 'Sign-in is temporarily unavailable. Please try again shortly.'
-          : !config.googleEnabled ? 'Google sign-in is unavailable. You can register with email below.' : 'Email verification is unavailable. You can continue with Google.';
+          : 'Some sign-in options are unavailable. Choose an available option below.';
         notice.hidden = false;
         retryButton.textContent = 'Check again ↻';
         retryButton.hidden = false;
@@ -283,12 +293,15 @@
         pendingEmail = pending.email; resendAt = Number(pending.resendAt) || 0;
         expiresAt = Number(pending.expiresAt); showVerification(false);
       }
-      if (new URLSearchParams(location.search).has('error')) {
-        showError(new Error('Google sign-in wasn’t completed. Try again, or use your email.'));
+      const signInErrors = new URLSearchParams(location.search).getAll('error');
+      if (signInErrors.length) {
+        showError(new Error(signInErrors.includes('email_not_verified')
+          ? 'Verify your email in GitHub’s settings, then try signing in again.'
+          : 'Sign-in wasn’t completed. Please try again.'));
         history.replaceState(null, '', '/register/');
       }
     } catch (error) {
-      config = { emailEnabled: false, googleEnabled: false };
+      config = { emailEnabled: false, googleEnabled: false, githubEnabled: false };
       showView('start', false);
       notice.textContent = 'Registration is temporarily unavailable. Please try again shortly.';
       notice.hidden = false;

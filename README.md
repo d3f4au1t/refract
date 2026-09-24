@@ -4,7 +4,7 @@ The website and registration app for Refract, a student hackathon at PRISMS.
 
 The frontend is plain HTML, CSS and JavaScript. Registration runs on Express, with Better Auth for sign-in, Resend for verification emails, and SQLite for storage.
 
-This is still a preview. Event details need to be filled in, and Google and email sign-in need to be configured before registration opens.
+This is still a preview. Event details need to be filled in, and GitHub, Google and email sign-in need to be configured before registration opens.
 
 ## Run locally
 
@@ -21,7 +21,7 @@ Generate a secret with `openssl rand -hex 32` and put it in `.env` as `BETTER_AU
 npm run dev
 ```
 
-Open [localhost:3001](http://localhost:3001). You can work on the event page without email or Google credentials; those sign-in buttons stay disabled until configured.
+Open [localhost:3001](http://localhost:3001). You can work on the event page without email, GitHub or Google credentials; those sign-in buttons stay disabled until configured.
 
 ## Where things live
 
@@ -44,7 +44,7 @@ The background logo stays fixed while the glass panel scrolls over it. The light
 
 Registration has its own page at `/register/`. Participants verify their email, enter their name and confirm that they attend PRISMS. Each account gets one pending registration with a reference number. Editing the name keeps the same reference; registering does not automatically approve an event place.
 
-Google sign-in needs a public domain. Email verification needs a Resend key and a verified sender. See [AWS setup](deploy/README.md) for configuration, deployment and backups. Keep credentials in `.env` locally or the private environment file on the server.
+GitHub and Google sign-in need OAuth credentials. Email verification needs a Resend key and a verified sender. See [AWS setup](deploy/README.md) for configuration, deployment and backups. Keep credentials in `.env` locally or the private environment file on the server.
 
 ## Before launch
 
@@ -58,4 +58,4 @@ npm test
 python3 -m unittest discover -s test -p '*_test.py'
 ```
 
-Then test a real email registration and Google login on the public site. The [prelaunch audit](docs/prelaunch-audit.md) lists what has been tested and what still needs to be done.
+Then test a real email registration and each social sign-in on the public site. The [prelaunch audit](docs/prelaunch-audit.md) lists what has been tested and what still needs to be done.

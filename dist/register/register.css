@@ -31,6 +31,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid #d5
 .registration-description strong{font-weight:500;color:#e3ebf3}
 .provider-button,.registration-submit{width:100%;min-height:54px;display:flex;align-items:center;justify-content:center;gap:13px;border:1px solid #bfdaee42;border-radius:9px;padding:15px 18px;background:#0b0f13;color:#e8f0f7;font:inherit;font-size:.86rem;font-weight:500;transition:background .18s,border-color .18s}
 .provider-button:hover:not(:disabled){background:#131a20;border-color:#cbe2f08c}
+.provider-button+.provider-button{margin-top:12px}
 .provider-button svg{flex-shrink:0}
 .registration-divider{display:flex;align-items:center;gap:16px;margin:26px 0;color:#8393a3;font-size:.73rem}
 .registration-divider::before,.registration-divider::after{content:"";height:1px;background:#bed7ee1c;flex:1}

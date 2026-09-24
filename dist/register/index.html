@@ -10,8 +10,8 @@
   <link rel="icon" href="/assets/favicon-rounded.svg?v=1" type="image/svg+xml" sizes="any">
   <link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/register/register.css?v=standalone-1">
-  <script src="/register/register.js?v=registration-recovery-2" defer></script>
+  <link rel="stylesheet" href="/register/register.css?v=github-1">
+  <script src="/register/register.js?v=github-1" defer></script>
 </head>
 <body class="registration-page">
   <header class="registration-header">
@@ -28,7 +28,11 @@
         <div id="form-error" class="form-error" role="alert" tabindex="-1" hidden></div>
         <div id="start-view" class="registration-view">
           <h1 id="registration-title" tabindex="-1">Register for<br>Refract.</h1>
-          <p class="registration-description">Use Google or verify your email to get started.</p>
+          <p class="registration-description">Sign in with GitHub, Google, or your email.</p>
+          <button id="github-sign-in" class="provider-button" type="button" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 .75a11.25 11.25 0 0 0-3.558 21.923c.563.104.768-.244.768-.542 0-.267-.01-.975-.015-1.914-3.13.68-3.791-1.508-3.791-1.508-.512-1.3-1.25-1.646-1.25-1.646-1.022-.699.078-.685.078-.685 1.13.079 1.724 1.159 1.724 1.159 1.005 1.722 2.637 1.224 3.279.936.102-.728.393-1.224.715-1.506-2.498-.284-5.124-1.249-5.124-5.564 0-1.23.44-2.232 1.159-3.02-.116-.285-.502-1.43.11-2.98 0 0 .945-.303 3.094 1.154A10.79 10.79 0 0 1 12 6.188c.956.004 1.918.129 2.817.379 2.148-1.457 3.091-1.154 3.091-1.154.614 1.55.228 2.695.112 2.98.722.788 1.157 1.79 1.157 3.02 0 4.326-2.63 5.277-5.136 5.555.404.35.766 1.041.766 2.099 0 1.515-.014 2.737-.014 3.109 0 .3.203.65.774.54A11.252 11.252 0 0 0 12 .75Z"/></svg>
+            <span>Continue with GitHub</span>
+          </button>
           <button id="google-sign-in" class="provider-button" type="button" disabled>
             <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.38a4.61 4.61 0 0 1-2 3.03v2.52h3.24c1.9-1.75 2.98-4.33 2.98-7.38Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.43l-3.24-2.52c-.9.6-2.05.96-3.38.96-2.61 0-4.82-1.76-5.61-4.13H3.05v2.59A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.39 13.88A6 6 0 0 1 6.07 12c0-.65.11-1.29.32-1.88V7.53H3.05A10 10 0 0 0 2 12c0 1.61.39 3.14 1.05 4.47l3.34-2.59Z"/><path fill="#EA4335" d="M12 5.99c1.47 0 2.79.51 3.83 1.51l2.87-2.87A9.61 9.61 0 0 0 12 2a10 10 0 0 0-8.95 5.53l3.34 2.59C7.18 7.75 9.39 5.99 12 5.99Z"/></svg>
             <span>Continue with Google</span>
@@ -81,7 +85,7 @@
           <div class="account-actions"><button id="edit-details" class="quiet-button" type="button">Edit your details</button><button class="quiet-button sign-out" type="button">Sign out</button></div>
         </div>
         <p class="registration-note">Registration: [Registration Opens]–[Signup Deadline]. Event: [Start Date]–[End Date].</p>
-        <details class="data-note"><summary>What information do we keep?</summary><p>Your name, verified email and registration status are stored for the Refract organizers. Google sign-in shares your basic profile and email address, not your inbox or password.</p></details>
+        <details class="data-note"><summary>What information do we keep?</summary><p>Your name, verified email and registration status are stored for the Refract organizers. GitHub and Google share your basic profile and email address. We don’t request access to your repositories, inbox, or password.</p></details>
         <noscript><p class="service-notice">Turn on JavaScript to verify your email and register. You can still <a href="/">read about the event</a>.</p></noscript>
       </div>
     </section>
