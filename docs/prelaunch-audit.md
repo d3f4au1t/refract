@@ -2,6 +2,8 @@
 
 **Decision: keep the site in preview. Do not announce registration as open yet.**
 
+**September 24 update:** The site now runs at [refracthack.org](https://refracthack.org) with HTTPS. GitHub sign-in is enabled: live consent, verified-email return to the details form, sign-out and repeat sign-in passed. No event registration was submitted during this check. Google and Resend still need credentials. The earlier IP/domain findings below describe the September 22–23 deployment; current setup is in [AWS notes](../deploy/README.md).
+
 Audited September 22–23, 2026. Application reviewed through commit `f6c2526`; expanded server tests are in `5a6f587`. The AWS preview is at <https://18.188.82.113:8443/>. This report covers the current features, not a certification that every possible failure or vulnerability has been eliminated.
 
 The event page and the locally exercised registration flow work. Launch is blocked by provider configuration and unfinished event information. Real email delivery and a complete Google login have **not** been verified.

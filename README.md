@@ -4,7 +4,7 @@ The website and registration app for Refract, a student hackathon at PRISMS.
 
 The frontend is plain HTML, CSS and JavaScript. Registration runs on Express, with Better Auth for sign-in, Resend for verification emails, and SQLite for storage.
 
-This is still a preview. Event details need to be filled in, and GitHub, Google and email sign-in need to be configured before registration opens.
+This is still a preview. GitHub sign-in works on [refracthack.org](https://refracthack.org/register/). Event details still need to be filled in, and Google and email sign-in need their credentials.
 
 ## Run locally
 

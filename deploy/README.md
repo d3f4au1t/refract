@@ -1,6 +1,6 @@
 # AWS registration service
 
-Refract is served at [refracthack.org](https://refracthack.org). Nginx serves `dist/` over HTTPS on port 443; `/api/` proxies to the Node service on `127.0.0.1:3001`. The service runs as the dedicated `refract` user. Node 24 is installed from Amazon Linux's repository. GitHub, Google and Resend are disabled independently until their configuration is present. No placeholder login or test-code endpoint is deployed.
+Refract is served at [refracthack.org](https://refracthack.org). Nginx serves `dist/` over HTTPS on port 443; `/api/` proxies to the Node service on `127.0.0.1:3001`. The service runs as the dedicated `refract` user. Node 24 is installed from Amazon Linux's repository. GitHub sign-in is configured and was tested live on September 24, 2026. Google and Resend remain disabled until their credentials are added. Each provider is enabled independently. No placeholder login or test-code endpoint is deployed.
 
 ## Public ports
 
