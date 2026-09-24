@@ -46,7 +46,7 @@
       });
       $('#rows').replaceChildren(fragment);
       $('#table-wrap').hidden = !data.registrations.length; $('#empty').hidden = !!data.registrations.length;
-      $('#empty-title').textContent = data.summary.total ? 'No matching registrations.' : 'No registrations yet.';
+      $('#empty-title').textContent = data.summary.total ? 'No matching registrations' : 'No registrations yet';
       $('#empty-text').textContent = data.summary.total ? 'Try a different name, email or reference.' : 'Completed registrations will appear here.';
       const start = data.matched ? (page - 1) * data.pageSize + 1 : 0;
       $('#results').textContent = data.matched ? `${start}–${start + data.registrations.length - 1} of ${data.matched}` : '0 results';

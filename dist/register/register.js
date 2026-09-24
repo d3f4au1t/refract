@@ -5,14 +5,14 @@
   const returnPath = adminSignIn ? '/register/?next=admin' : accountSignIn ? '/register/?next=account' : '/register/';
   if (adminSignIn) {
     document.title = 'Organizer sign-in — Refract';
-    $('#registration-title').textContent = 'Organizer sign-in.';
+    $('#registration-title').textContent = 'Organizer sign-in';
     $('.registration-description').textContent = 'Sign in with your organizer account to view registrations.';
     $('.registration-steps').hidden = true;
     $('.registration-note').hidden = true;
   }
   if (accountSignIn) {
     document.title = 'Sign in — Refract';
-    $('#registration-title').textContent = 'Welcome back.';
+    $('#registration-title').textContent = 'Welcome back';
     $('.registration-description').textContent = 'Sign in to view your account.';
     $('.registration-steps').hidden = true;
     $('.registration-note').hidden = true;
