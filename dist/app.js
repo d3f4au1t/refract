@@ -348,9 +348,42 @@ const moveJourney = direction => {
 journeyPrevious.addEventListener('click', () => moveJourney(-1));
 journeyNext.addEventListener('click', () => moveJourney(1));
 
-// Only a header resize changes the fixed menu mask; scrolling never moves it.
+// Mirror only the glass artwork above the content mask. These document-positioned
+// surfaces scroll with the originals; their children paint only inside the menu.
+const footer = document.querySelector('footer');
+const menuGlass = [glass, footer].map(container => {
+  const source = container.querySelector(':scope > .glass-surface');
+  const mirror = source.cloneNode(true);
+  mirror.classList.add('menu-glass');
+  document.body.append(mirror);
+  return { source, mirror };
+});
+const measureMenuGlass = () => {
+  const bodyBounds = document.body.getBoundingClientRect();
+  const measurements = menuGlass.map(({ source, mirror }) => ({
+    mirror, bounds: source.getBoundingClientRect(), css: getComputedStyle(source)
+  }));
+  measurements.forEach(({ mirror, bounds, css }) => {
+    mirror.style.top = `${bounds.top - bodyBounds.top}px`;
+    mirror.style.left = `${bounds.left - bodyBounds.left}px`;
+    mirror.style.width = `${bounds.width}px`;
+    mirror.style.height = `${bounds.height}px`;
+    mirror.style.borderRadius = css.borderRadius;
+    ['--glass-radius', '--glass-blur', '--glass-tint'].forEach(property => {
+      mirror.style.setProperty(property, css.getPropertyValue(property));
+    });
+  });
+};
+const menuGlassObserver = new ResizeObserver(measureMenuGlass);
+[hero, glass, footer].forEach(element => menuGlassObserver.observe(element));
+window.addEventListener('resize', measureMenuGlass);
+window.addEventListener('pageshow', measureMenuGlass);
+document.fonts.ready.then(measureMenuGlass);
+
+// Only layout changes update the menu mask and mirrors, never scrolling.
 const measureMenu = () => {
   document.documentElement.style.setProperty('--menu-height', `${header.offsetHeight}px`);
+  measureMenuGlass();
   requestLightUpdate();
 };
 new ResizeObserver(measureMenu).observe(header);

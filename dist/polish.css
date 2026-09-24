@@ -231,6 +231,9 @@ dialog[open]::backdrop{animation:backdrop-arrive .3s ease-out}
 .page-content{position:relative;z-index:1;display:flow-root}
 .menu-backdrop{z-index:18;clip-path:inset(0 0 calc(100% - var(--menu-height)) 0);pointer-events:auto}
 .menu-backdrop>img{pointer-events:none}
+/* Continue the glass light through the menu without exposing scrolling content. */
+.menu-glass.glass-surface{inset:auto;z-index:18;background:transparent}
+.menu-glass>.glass-light{clip-path:inset(0 0 calc(100% - var(--menu-height)) 0)}
 @media(max-width:760px){:root{--menu-height:74px}}
 
 /* Use the supplied white mark as a luminance mask: black becomes transparent. */
