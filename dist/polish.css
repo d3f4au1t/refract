@@ -396,3 +396,6 @@ html:not(.js) .menu-toggle{visibility:hidden}
 @media(prefers-reduced-motion:reduce){.button:hover>span,.text-link:hover>span{transform:none}}
 /* A soft text shadow avoids dark outlines over illuminated areas. */
 .glass-content{text-shadow:0 2px 12px #0009}
+
+[data-registration][hidden]{display:none!important}
+.button>[data-registration-label]{font-size:inherit;line-height:inherit;transform:none!important;transition:none}
