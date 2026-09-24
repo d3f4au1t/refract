@@ -1,6 +1,6 @@
 # AWS registration service
 
-Refract is served at [refracthack.org](https://refracthack.org). Nginx serves `dist/` over HTTPS on port 443; `/api/` proxies to the Node service on `127.0.0.1:3001`. The service runs as the dedicated `refract` user. Node 24 is installed from Amazon Linux's repository. GitHub sign-in is configured and was tested live on September 24, 2026. Google and Resend remain disabled until their credentials are added. Each provider is enabled independently. No placeholder login or test-code endpoint is deployed.
+Refract is served at [refracthack.org](https://refracthack.org). Nginx serves `dist/` over HTTPS on port 443; `/api/` proxies to the Node service on `127.0.0.1:3001`. The service runs as the dedicated `refract` user. Node 24 is installed from Amazon Linux's repository. GitHub and Resend email sign-in are configured and were tested live on September 24, 2026. Google remains disabled until its credentials are added. Each provider is enabled independently. No placeholder login or test-code endpoint is deployed.
 
 ## Public ports
 
@@ -11,6 +11,10 @@ The application origin is `https://refracthack.org`. The installer updates only 
 ## DNS and certificates
 
 Namecheap BasicDNS holds an A record for `@` pointing to `18.188.82.113` and a CNAME for `www` pointing to `refracthack.org`. If the server's public IP changes, update the A record. Use an Elastic IP to keep that address stable.
+
+Resend has verified `refracthack.org` for sending. The live sender is `Refract <registration@refracthack.org>`. Namecheap also holds the Resend-generated TXT record at `resend._domainkey`, CNAME `rsend` → `rsend.forge.rmta.net`, CNAME `send` → `send.forge.rmta.net`, and TXT `_dmarc` → `v=DMARC1; p=none;`. The existing root SPF and Namecheap mail-forwarding records were preserved. Use the records shown by Resend if reconfiguring the domain; older guides may show a different return-path setup. Incoming mail through Resend is disabled.
+
+The AWS key has sending-only access restricted to `refracthack.org`. It is stored in the private server environment file. A live verification email was delivered and its code successfully established a session; no event registration was submitted during this test.
 
 The domain certificate covers both `refracthack.org` and `www.refracthack.org`. It lives under `/etc/letsencrypt/live/refracthack.org/`; the legacy IP certificate remains under `/etc/letsencrypt/live/refract-ip/`. Private keys stay on the server.
 
