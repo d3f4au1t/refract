@@ -1,7 +1,7 @@
 (() => {
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-  const state = { section:'accounts', accountPage:1, registrationPage:1, accountPages:1, registrationPages:1, currentUserId:null, selected:null, action:null, setup:false, busy:false, unlocked:false };
-  let controller, epoch=0, debounce, expiryTimer;
+  const state = { section:'accounts', accountPage:1, registrationPage:1, accountPages:1, registrationPages:1, currentUserId:null, selected:null, action:null, setup:false, busy:false, passwordBusy:false, unlocked:false };
+  let controller, epoch=0, securityEpoch=0, debounce, expiryTimer;
   const date = value => value ? new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'short'}).format(new Date(value)) : '—';
   const statusName = status => ({pending:'Received',approved:'Approved',waitlisted:'Waitlisted',declined:'Declined'})[status] || 'Not submitted';
   const el = (tag,text,className) => { const node=document.createElement(tag); if(text!==undefined) node.textContent=text; if(className) node.className=className; return node; };
@@ -28,16 +28,20 @@
     return response;
   }
   async function checkSecurity() {
+    const current = ++securityEpoch;
     try {
       const response=await request('/api/admin/security');const data=await response.json();
+      if(current!==securityEpoch || state.passwordBusy) return false;
       $('#gate').hidden=true;$('#sign-out').hidden=false;
       if(!data.unlocked){
+        const resetForm = $('#password-gate').hidden || state.setup !== !data.passwordConfigured;
         clear();state.setup=!data.passwordConfigured;$('#password-gate').hidden=false;
         $('#password-title').textContent=state.setup?'Set the shared password':'Unlock dashboard';
         $('#password-help').textContent=state.setup?'Set one password for all Refract admins. Use at least 12 characters and share it privately with the other organizers.':'Enter the shared admin password to view accounts and manage the event.';
         $('#admin-password').autocomplete=state.setup?'new-password':'current-password';$('#admin-password').minLength=state.setup?12:1;
         $('#password-repeat').hidden=!state.setup;$('#admin-password-repeat').required=state.setup;
-        $('#password-submit').textContent=state.setup?'Set password and unlock':'Unlock';$('#password-form').reset();
+        $('#password-submit').textContent=state.setup?'Set password and unlock':'Unlock';
+        if(resetForm) { $('#password-form').reset(); $('#password-error').hidden=true; }
         return false;
       }
       state.unlocked=true;$('#password-gate').hidden=true;$('#dashboard').hidden=false;$('#lock').hidden=false;$('#account-email').textContent=data.email;
@@ -134,17 +138,17 @@
     try{const response=await request(`/api/admin/registrations.csv?${params()}`);const url=URL.createObjectURL(await response.blob()),link=el('a');link.href=url;link.download=`refract-registrations-${new Date().toISOString().slice(0,10)}.csv`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){if(state.unlocked)fail(error.message);}finally{if(state.unlocked)load();}
   });
   $('#password-form').addEventListener('submit',async event=>{
-    event.preventDefault();$('#password-error').hidden=true;
+    event.preventDefault();if(state.passwordBusy)return;$('#password-error').hidden=true;
     if(state.setup&&$('#admin-password').value!==$('#admin-password-repeat').value){inlineError('#password-error','The passwords don’t match.');return;}
-    $('#password-submit').disabled=true;
-    try{await request(`/api/admin/security/${state.setup?'setup':'unlock'}`,{password:$('#admin-password').value});$('#password-form').reset();if(await checkSecurity())load();}
-    catch(error){if(!$('#password-gate').hidden)inlineError('#password-error',error.message);}finally{$('#password-submit').disabled=false;}
+    state.passwordBusy=true;++securityEpoch;$('#password-submit').disabled=true;
+    try{await request(`/api/admin/security/${state.setup?'setup':'unlock'}`,{password:$('#admin-password').value});$('#password-form').reset();state.passwordBusy=false;if(await checkSecurity())load();}
+    catch(error){if(!$('#password-gate').hidden)inlineError('#password-error',error.message);}finally{state.passwordBusy=false;$('#password-submit').disabled=false;}
   });
   $('#lock').addEventListener('click',async()=>{clear();try{await request('/api/admin/security/lock',{});await checkSecurity();}catch(error){fail(error.message);}});
   async function signOut(button){button.disabled=true;try{await request('/api/auth/sign-out',{});clear();location.assign('/register/?next=admin');}catch(error){fail(error.message);button.disabled=false;}}
   $('#sign-out').addEventListener('click',event=>signOut(event.currentTarget));$('#switch-account').addEventListener('click',event=>signOut(event.currentTarget));
   window.addEventListener('pagehide',()=>{clear();$('#password-form').reset();});window.addEventListener('pageshow',async event=>{if(event.persisted&&await checkSecurity())load();});
-  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&!state.busy){const wasUnlocked=state.unlocked;if(await checkSecurity()&&!wasUnlocked)load();}});
+  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&!state.busy&&!state.passwordBusy){const wasUnlocked=state.unlocked;if(await checkSecurity()&&!wasUnlocked)load();}});
   setInterval(async()=>{if(document.visibilityState==='visible'&&state.unlocked&&!state.busy){if(await checkSecurity()&&state.section==='traffic')load();}},60000);
   checkSecurity().then(allowed=>{if(allowed)load();});
 })();
