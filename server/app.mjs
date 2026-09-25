@@ -12,6 +12,7 @@ import { getMigrations } from 'better-auth/db/migration';
 import { toNodeHandler, fromNodeHeaders } from 'better-auth/node';
 import { createEmailSender } from './email.mjs';
 import { installAdminRoutes } from './admin.mjs';
+import { installTraffic } from './traffic.mjs';
 
 const staticRoot = fileURLToPath(new URL('../dist', import.meta.url));
 const authPaths = new Set(['/get-session', '/sign-in/social', '/callback/google', '/callback/github', '/email-otp/send-verification-otp', '/sign-in/email-otp', '/sign-out', '/ok', '/error']);
@@ -141,12 +142,14 @@ export async function createApp(config, overrides = {}) {
     if (!session?.user) return res.status(401).json({ code: 'SIGN_IN_REQUIRED', message: 'Verify your email to continue.' });
     if (!session.user.emailVerified) return res.status(403).json({ code: 'EMAIL_NOT_VERIFIED', message: 'Please verify your email first.' });
     req.user = session.user;
+    req.authSessionId = session.session.id;
     next();
   };
-  installAdminRoutes(app, { db, requireUser, adminUserIds: config.adminUserIds });
+  const { isAdmin } = installAdminRoutes(app, { db, requireUser, adminUserIds: config.adminUserIds });
+  installTraffic(app, { db, secret: config.secret });
   const registrationFor = userId => db.prepare('SELECT reference, name, status, created_at AS createdAt FROM registrations WHERE user_id = ?').get(userId) || null;
   app.get('/api/registration', requireUser, (req, res) => {
-    res.json({ user: { name: req.user.name, email: req.user.email, isOrganizer: config.adminUserIds?.includes(req.user.id) || false }, registration: registrationFor(req.user.id) });
+    res.json({ user: { name: req.user.name, email: req.user.email, isOrganizer: isAdmin(req.user.id) }, registration: registrationFor(req.user.id) });
   });
   app.post('/api/registration', requireUser, (req, res) => {
     const name = typeof req.body?.name === 'string' ? req.body.name.trim().replace(/\s+/g, ' ') : '';

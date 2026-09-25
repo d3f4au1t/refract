@@ -34,7 +34,8 @@
     $('#profile-name').textContent = value.name;
     $('#reference').textContent = value.reference;
     $('#submitted').textContent = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(value.createdAt));
-    $('#registration-status').textContent = value.status === 'pending' ? 'Registration received' : value.status;
+    $('#registration-status').textContent = ({ pending: 'Registration received', approved: 'Registration approved', waitlisted: 'On the waitlist', declined: 'Registration declined' })[value.status] || value.status;
+    $('#registration-note').textContent = ({ pending: 'Your form is saved. Registration does not yet confirm an event place.', approved: 'An organizer has approved your registration.', waitlisted: 'An organizer has placed your registration on the waitlist.', declined: 'Your registration was not approved. Contact the organizers if you have questions.' })[value.status] || 'Contact the organizers if you have questions about your registration.';
   }
   async function load() {
     if (busy) return;

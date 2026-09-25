@@ -1,5 +1,15 @@
 # Refract prelaunch audit
 
+## Admin management and traffic — September 25, 2026
+
+The admin dashboard now has all-account management, editable names and registration statuses, grant/revoke admin controls, session revocation, confirmed account deletion, an activity log and first-party traffic reports. The private environment allowlist is migrated once to persistent database roles. Existing role removals survive a restart.
+
+All admin data, exports and management actions require both a verified admin session and the shared admin password. One admin sets the shared password on first use; every other admin unlocks with the same password. Unlocks expire after 30 minutes and do not carry over to a different sign-in session. Passwords are salted scrypt hashes. Five failed attempts produce a 15-minute lockout. Admins cannot remove their own role or delete their own account.
+
+Validation: 36 Node tests and 5 configuration-helper tests pass. New tests cover the shared-password gate, lockout and expiry, authorization, account edits, immediate role revocation, live-record deletion and session invalidation using isolated data, role persistence across restart, heartbeat deduplication, traffic report authorization and opt-out. Local browser checks covered password unlock/lock, account search/edit, the deletion confirmation, self-protection, traffic reporting and a 390px mobile layout without page overflow. No live accounts were edited or deleted during testing.
+
+Traffic collection begins with this release; it does not infer earlier visits. Counts are approximate browsers rather than individual people. Verified sign-in email identities are not editable in the dashboard. Participant-facing registration messages now reflect approved, waitlisted and declined statuses.
+
 > September 24 update: the site now uses `https://refracthack.org` with trusted HTTPS. Google, GitHub and email sign-in have all completed live tests. Google is in production mode with only basic profile/email/OpenID scopes. Its live test preserved the existing account, registration reference and admin access. The September 22–23 provider/domain findings below are historical; unfinished event information and operational items still apply.
 
 

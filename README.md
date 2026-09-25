@@ -52,9 +52,16 @@ GitHub and Google sign-in need OAuth credentials. Email verification needs a Res
 
 ## Organizer dashboard
 
-Open `/admin/` and sign in with an authorized organizer account. The page lists submitted registrations with names, emails, references and dates. Search, sort, or export the matching results as CSV. Signing in without submitting the registration form does not add a person to the list.
+Open `/admin/` and sign in with an authorized organizer account. The first admin to visit sets one shared admin password. Every admin needs that password to unlock the dashboard, even when already signed in. Unlocks last 30 minutes and are specific to the current sign-in session; the Lock button ends access immediately.
 
-Access is controlled on the server through `ADMIN_USER_IDS`; it is denied by default. Ordinary participants cannot retrieve the list or CSV, even if they open the admin URL. See [AWS setup](deploy/README.md#organizer-access) to configure access.
+- **Accounts:** all signed-in users, verified-email status, linked providers, admin status and registration details. Edit account and registration names, approve/waitlist/decline registrations, grant or revoke admin access, sign out other accounts, or delete an account after typing its email. Admins cannot delete themselves or remove their own access.
+- **Registrations:** submitted forms, search, sorting, pagination and CSV export.
+- **Traffic:** active browsers in the last five minutes, today's approximate visitors and page views, a 14-day chart, and today's popular pages. Collection starts with this version; there is no historical backfill.
+- **Activity:** the 50 most recent admin changes.
+
+Verified email addresses are sign-in identities and cannot be overwritten in the dashboard. Account deletion removes the live account, registration, provider links and sessions; older backups may retain records. It does not ban someone from signing up again.
+
+Admin roles are stored privately in SQLite. `ADMIN_USER_IDS` seeds the initial roles once; later role changes use the dashboard and survive restarts. The shared password is stored only as a salted scrypt hash. See [AWS setup](deploy/README.md#organizer-access) for recovery and backups.
 
 ## Before launch
 

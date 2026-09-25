@@ -66,11 +66,23 @@ Credentials are stored only in the private AWS environment file. Deployment pres
 
 ## Organizer access
 
-The read-only dashboard is at `/admin/`. Add a comma-separated list of existing, verified account IDs to `ADMIN_USER_IDS` in `/etc/refract/refract.env`, then restart `refract`. An empty value grants nobody access. Find the intended account in the private SQLite `user` table by its verified email; use its immutable `id`, not its email address, and confirm the identity before granting access. Keep this configuration on the server, outside Git.
+The dashboard is at `/admin/`. On the first deployment of the management dashboard, the existing private `ADMIN_USER_IDS` list is imported once into `admin_roles` in SQLite. Existing admins keep access. After that, grant and remove admin access through the Accounts panel. Editing the environment list does not re-add someone whose access was removed. All routes check the current database role, a verified sign-in session, and a separate admin-password unlock.
 
-The page reuses the normal GitHub or email sign-in and returns to the dashboard. Both list and CSV endpoints validate the session and allowlist on every request. Removing an ID and restarting revokes organizer access without deleting that person’s account or registration. Releases preserve this setting.
+The first admin sets one shared password in the dashboard. All admins use that password. It must be 12–128 characters and is stored only as a salted scrypt hash in `admin_password`. `admin_unlocks` records an expiry for each signed-in session, lasting 30 minutes. Five failed password attempts lock that admin's password checks for 15 minutes. The Lock button, session revocation, and removal of admin access invalidate unlocks. Keep the shared password out of Git and share it privately with organizers.
 
-The list contains submitted forms only. CSV export includes all matching results across pages and neutralizes spreadsheet formulas in participant input. Treat downloaded files as private participant data.
+If the shared password is lost, the server owner can reset it. On the server, stop the service, open the private SQLite database with a SQLite client as root, and in one transaction delete the rows in `admin_password`, `admin_unlocks` and `admin_password_attempts`. Restart the service. An existing admin can then set a new shared password. This does not delete roles or registrations. Back up the database before recovery; do not copy its contents into chat or Git.
+
+For emergency role recovery, verify the intended person in the private `user` table and insert their immutable account ID into `admin_roles`. Normal role management must use the dashboard. An admin cannot remove their own access, sign themselves out through account management, or delete their own account.
+
+Accounts includes people who signed in but did not register. Names and registration status are editable; verified email identities are not. Deleting an account removes its registration, provider links, sessions and role from the live database. Older backups remain subject to the backup retention policy. The person can sign up again. Admin actions record account IDs, action names and timestamps; the activity display resolves names only for accounts that still exist.
+
+The submitted-registration list and CSV remain separate from all accounts. CSV output neutralizes spreadsheet formulas. Treat downloaded files as private participant data.
+
+## Website traffic
+
+The first-party `/traffic.js` script runs on home, registration, account and privacy pages. Admin visits are excluded. A daily browser identifier is hashed with the server secret and UTC date. The traffic table stores that hash, a page-view identifier, an allowlisted path and first/last timestamps. A visible tab sends a heartbeat once a minute; heartbeats update activity without creating extra page views. No account identifiers, emails, query strings or raw IP addresses are stored in traffic records. IP-based rate limiting is held briefly in memory.
+
+Reports show approximate browsers, not verified individual people. Collection respects Do Not Track and Global Privacy Control; blocked JavaScript, multiple devices and bots affect counts. Records older than the last 30 UTC calendar days are pruned on startup and during traffic requests/report reads. There is no backfill from Nginx logs. The dashboard shows a 14-day daily chart and active browsers within the last five minutes.
 
 ## Deploy a committed release
 

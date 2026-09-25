@@ -6,7 +6,8 @@
   <title>Your account — Refract</title>
   <link rel="icon" href="/assets/favicon-rounded.svg?v=1" type="image/svg+xml">
   <link rel="stylesheet" href="/account/account.css?v=1">
-  <script defer src="/account/account.js?v=1"></script>
+  <script defer src="/account/account.js?v=2"></script>
+  <script defer src="/traffic.js?v=1"></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to account</a>
@@ -32,7 +33,7 @@
           <div id="registered" hidden>
             <p class="status-badge"><span aria-hidden="true"></span><span id="registration-status">Registration received</span></p>
             <dl class="receipt"><div><dt>Reference number</dt><dd id="reference"></dd></div><div><dt>Submitted</dt><dd id="submitted"></dd></div><div><dt>Eligibility</dt><dd>PRISMS student · self-confirmed</dd></div></dl>
-            <p class="card-note">Your form is saved. Registration does not yet confirm an event place.</p>
+            <p id="registration-note" class="card-note">Your form is saved. Registration does not yet confirm an event place.</p>
           </div>
           <div id="not-registered" hidden><p class="incomplete-title">You haven’t registered yet.</p><p class="card-note">Your account is ready. Add your name and confirm that you’re a PRISMS student to submit your registration.</p><a class="button primary" href="/register/">Complete registration <span aria-hidden="true">↗</span></a></div>
         </section>

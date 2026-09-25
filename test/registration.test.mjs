@@ -399,6 +399,7 @@ async function organizerFixture(t) {
   seedUser(f, 'organizer', 'organizer@example.com');
   await f.send('organizer@example.com');
   f.adminCookie = (await f.verify('organizer@example.com', f.emails.at(-1).otp)).cookie;
+  assert.equal((await f.request('/api/admin/security/setup', { password: 'test-only-admin-password' }, f.adminCookie)).status, 200);
   return f;
 }
 test('admin data and CSV require a verified, allowlisted account and valid session', async t => {
@@ -463,4 +464,127 @@ test('CSV quotes participant content and prevents spreadsheet formula execution'
   assert.equal(csv.status, 200);
   assert.ok(csv.data.includes('"\'  =SUM(1,2)\n""name"""'));
   assert.ok(csv.data.includes('csv@example.com'));
+});
+
+test('all admin data and mutations require the extra session-bound password', async t => {
+  const f = await organizerFixture(t);
+  const get = (path, body) => f.request(path,body,f.adminCookie);
+  assert.equal((await get('/api/admin/security')).data.unlocked,true);
+  const stored=f.db.prepare('SELECT * FROM admin_password').get();
+  assert.notEqual(stored.hash,'test-only-admin-password');assert.equal(stored.hash.length,128);
+  assert.equal((await get('/api/admin/security/setup',{password:'overwrite-admin-password'})).status,409);
+  await get('/api/admin/security/lock',{});
+  seedUser(f,'target','target@example.com');
+  for(const path of ['/api/admin/accounts','/api/admin/traffic','/api/admin/activity','/api/admin/registrations','/api/admin/registrations.csv']) assert.equal((await get(path)).status,428);
+  for(const action of ['edit','admin','delete','revoke-sessions']) assert.equal((await get(`/api/admin/accounts/target/${action}`,{})).status,428);
+  assert.equal((await get('/api/admin/security/unlock',{password:'wrong-password'})).status,400);
+  assert.equal((await get('/api/admin/security/unlock',{password:'test-only-admin-password'})).status,200);
+  assert.equal((await get('/api/admin/accounts')).status,200);
+  f.db.prepare('UPDATE admin_unlocks SET expires_at=0').run();
+  assert.equal((await get('/api/admin/accounts')).status,428);
+  for(let i=0;i<5;i++)assert.equal((await get('/api/admin/security/unlock',{password:'wrong-password'})).status,400);
+  assert.equal((await get('/api/admin/security/unlock',{password:'test-only-admin-password'})).status,429);
+  f.db.prepare('DELETE FROM admin_password_attempts').run();
+  assert.equal((await f.request('/api/admin/security/unlock',{password:'test-only-admin-password'},f.adminCookie,'https://attacker.example')).status,403);
+  // A second sign-in does not inherit an existing session's unlock.
+  await get('/api/admin/security/unlock',{password:'test-only-admin-password'});
+  f.db.prepare('DELETE FROM email_cooldown').run();await f.send('organizer@example.com');
+  const otherSession=await f.verify('organizer@example.com',f.emails.at(-1).otp);
+  assert.equal((await f.request('/api/admin/accounts',undefined,otherSession.cookie)).status,428);
+});
+
+test('admins can edit names and registration status, grant and revoke access immediately',async t=>{
+  const f=await organizerFixture(t);
+  await f.send('participant@example.com');const member=await f.verify('participant@example.com',f.emails.at(-1).otp),id=member.data.user.id;
+  const registration=await f.request('/api/registration',{name:'Original Student',student:true},member.cookie);
+  const url=`/api/admin/accounts/${id}`,admin=(path,body)=>f.request(path,body,f.adminCookie);
+  let result=await admin('/api/admin/accounts');assert.equal(result.data.summary.accounts,2);assert.equal(result.data.summary.admins,1);
+  assert.equal(result.data.accounts.find(a=>a.id===id).isAdmin,0);
+  result=await admin(url+'/edit',{name:'New Profile',registeredName:'New Registration',status:'approved'});assert.equal(result.status,200);
+  assert.equal(result.data.account.reference,registration.data.registration.reference);
+  result=await f.request('/api/registration',undefined,member.cookie);assert.equal(result.data.registration.status,'approved');assert.equal(result.data.registration.name,'New Registration');
+  assert.equal((await admin(url+'/edit',{name:'New Profile',email:'attacker@example.com',registeredName:'New Registration',status:'approved'})).status,400);
+  assert.equal((await admin(url+'/edit',{name:'X',registeredName:'New Registration',status:'approved'})).status,400);
+  assert.equal((await admin(url+'/admin',{enabled:true})).status,200);
+  assert.equal((await f.request('/api/registration',undefined,member.cookie)).data.user.isOrganizer,true);
+  assert.equal((await f.request('/api/admin/accounts',undefined,member.cookie)).status,428);
+  assert.equal((await f.request('/api/admin/security/unlock',{password:'test-only-admin-password'},member.cookie)).status,200);
+  assert.equal((await f.request('/api/admin/accounts',undefined,member.cookie)).status,200);
+  assert.equal((await admin(url+'/admin',{enabled:false})).status,200);
+  assert.equal((await f.request('/api/admin/accounts',undefined,member.cookie)).status,403);
+  assert.equal((await f.request('/api/registration',undefined,member.cookie)).data.user.isOrganizer,false);
+  for(const [action,body] of [['admin',{enabled:false}],['delete',{confirmEmail:'organizer@example.com'}],['revoke-sessions',{}]]) assert.equal((await admin(`/api/admin/accounts/organizer/${action}`,body)).status,409);
+  f.db.prepare('UPDATE user SET emailVerified=0 WHERE id=?').run(id);
+  assert.equal((await admin(url+'/admin',{enabled:true})).status,409);
+  assert.equal((await admin('/api/admin/accounts?role=admin')).data.matched,1);
+  assert.equal((await admin('/api/admin/accounts?q=NEW')).data.matched,1);
+  assert.equal((await admin('/api/admin/accounts?page=0')).status,400);
+  assert.equal((await admin('/api/admin/activity')).data.events.length,3);
+});
+
+test('account deletion requires exact confirmation, removes sign-ins, and invalidates sessions',async t=>{
+  const f=await organizerFixture(t);
+  await f.send('delete@example.com');const member=await f.verify('delete@example.com',f.emails.at(-1).otp),id=member.data.user.id;
+  await f.request('/api/registration',{name:'Delete Student',student:true},member.cookie);
+  f.db.prepare('INSERT INTO account(id,accountId,providerId,userId,createdAt,updatedAt) VALUES(?,?,?,?,?,?)').run('linked-github','test-provider-id','github',id,Date.now(),Date.now());
+  const url=`/api/admin/accounts/${id}`;
+  assert.equal((await f.request(url+'/delete',{confirmEmail:'wrong@example.com'},f.adminCookie)).status,400);
+  assert.equal((await f.request(url+'/delete',{confirmEmail:'delete@example.com'},member.cookie)).status,403);
+  assert.equal((await f.request(url+'/delete',{confirmEmail:'delete@example.com'},f.adminCookie,'https://attacker.example')).status,403);
+  assert.equal((await f.request(url+'/delete',{confirmEmail:'delete@example.com'},f.adminCookie)).status,200);
+  for(const [table,col] of [['user','id'],['account','userId'],['session','userId'],['registrations','user_id']])assert.equal(f.db.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE ${col}=?`).get(id).n,0);
+  assert.equal((await f.request('/api/registration',undefined,member.cookie)).status,401);
+  assert.equal((await f.request(url+'/delete',{confirmEmail:'delete@example.com'},f.adminCookie)).status,404);
+  const log=(await f.request('/api/admin/activity',undefined,f.adminCookie)).data.events;
+  assert.equal(log[0].target,'Deleted account');assert.equal(JSON.stringify(log).includes('delete@example.com'),false);
+});
+
+test('sign out all devices preserves the account and registration',async t=>{
+  const f=await organizerFixture(t);await f.send('sessions@example.com');const member=await f.verify('sessions@example.com',f.emails.at(-1).otp);
+  await f.request('/api/registration',{name:'Session Student',student:true},member.cookie);
+  assert.equal((await f.request(`/api/admin/accounts/${member.data.user.id}/revoke-sessions`,{},f.adminCookie)).status,200);
+  assert.equal((await f.request('/api/registration',undefined,member.cookie)).status,401);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS n FROM registrations').get().n,1);
+});
+
+test('admin roles persist across restart without re-importing removed bootstrap admins',async t=>{
+  const directory=mkdtempSync(join(tmpdir(),'refract-roles-'));t.after(()=>rmSync(directory,{recursive:true,force:true}));
+  const config={databasePath:join(directory,'test.sqlite'),baseURL:'http://localhost:3001',secret:randomBytes(32).toString('hex'),adminUserIds:['first','second']};
+  const first=await createApp(config,{sendEmail:null});
+  assert.equal(first.db.prepare('SELECT COUNT(*) AS n FROM admin_roles').get().n,2);
+  first.db.prepare('DELETE FROM admin_roles WHERE user_id=?').run('second');first.db.prepare('INSERT INTO admin_roles VALUES(?)').run('third');first.close();
+  const second=await createApp(config,{sendEmail:null});
+  try{assert.deepEqual(second.db.prepare('SELECT user_id FROM admin_roles ORDER BY user_id').all().map(r=>r.user_id),['first','third']);}finally{second.close();}
+});
+
+test('traffic deduplicates heartbeats, separates visitors, limits collection and protects reports',async t=>{
+  const f=await organizerFixture(t);
+  const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222222222',c='33333333-3333-4333-8333-333333333333';
+  const ping=body=>f.request('/api/traffic',body);
+  for(let i=0;i<3;i++)assert.equal((await ping({visitor:a,view:a,path:'/'})).status,204);
+  await ping({visitor:a,view:b,path:'/account/'});await ping({visitor:b,view:c,path:'/'});
+  let report=await f.request('/api/admin/traffic',undefined,f.adminCookie);
+  assert.deepEqual(report.data.today,{views:3,visitors:2});assert.equal(report.data.active,2);assert.equal(report.data.days.length,14);
+  const rows=f.db.prepare('SELECT * FROM traffic_views').all();assert.ok(rows.every(r=>r.visitor!==a&&r.visitor!==b));
+  assert.equal((await ping({visitor:a,view:c,path:'/admin/'})).status,400);
+  assert.equal((await ping({visitor:a,view:c,path:'/account/?email=private@example.com'})).status,400);
+  assert.equal((await ping({visitor:'bad',view:c,path:'/'})).status,400);
+  assert.equal((await f.request('/api/admin/traffic')).status,401);
+  assert.equal((await f.request('/api/traffic',{visitor:a,view:c,path:'/'},null,'https://attacker.example')).status,403);
+  const headers={'origin':f.config.baseURL,'content-type':'application/json',dnt:'1'};
+  assert.equal((await fetch(f.url+'/api/traffic',{method:'POST',headers,body:JSON.stringify({visitor:c,view:c,path:'/'})})).status,204);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS n FROM traffic_views').get().n,3);
+  f.db.prepare('UPDATE traffic_views SET last_seen=?').run(Date.now()-360000);
+  report=await f.request('/api/admin/traffic',undefined,f.adminCookie);assert.equal(report.data.active,0);
+});
+
+test('ordinary users cannot configure or use the shared password and invalid setup stays unset',async t=>{
+  const f=await fixture(t,{config:{adminUserIds:['organizer']}});seedUser(f,'organizer','organizer@example.com');
+  await f.send('organizer@example.com');const admin=await f.verify('organizer@example.com',f.emails.at(-1).otp);
+  assert.equal((await f.request('/api/admin/security/setup',{password:'short'},admin.cookie)).status,400);
+  assert.equal(f.db.prepare('SELECT COUNT(*) AS n FROM admin_password').get().n,0);
+  await f.send('ordinary@example.com');const member=await f.verify('ordinary@example.com',f.emails.at(-1).otp);
+  for(const action of ['setup','unlock','lock'])assert.equal((await f.request('/api/admin/security/'+action,{password:'shared-test-password'},member.cookie)).status,403);
+  assert.equal((await f.request('/api/admin/security/setup',{password:'shared-test-password'},admin.cookie)).status,200);
+  assert.equal((await f.request('/api/admin/security/unlock',{password:'shared-test-password'},member.cookie)).status,403);
 });

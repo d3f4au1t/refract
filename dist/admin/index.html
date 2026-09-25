@@ -3,27 +3,62 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#080b0e">
-  <title>Registrations — Refract</title>
+  <title>Admin — Refract</title>
   <link rel="icon" href="/assets/favicon-rounded.svg?v=1" type="image/svg+xml">
-  <link rel="stylesheet" href="/admin/admin.css?v=1">
-  <script defer src="/admin/admin.js?v=plain-headings-1"></script>
+  <link rel="stylesheet" href="/admin/admin.css?v=2">
+  <script defer src="/admin/admin.js?v=2"></script>
 </head>
 <body>
-  <a class="skip" href="#main">Skip to registrations</a>
-  <header><a class="brand" href="/" aria-label="Refract home"><span class="symbol" aria-hidden="true"></span>REFRACT <span class="tag">ORGANIZERS</span></a><nav aria-label="Admin navigation"><a href="/">View website <span aria-hidden="true">↗</span></a><button id="sign-out" hidden>Sign out</button></nav></header>
+  <a class="skip" href="#main">Skip to dashboard</a>
+  <header><a class="brand" href="/" aria-label="Refract home"><span class="symbol" aria-hidden="true"></span>REFRACT <span class="tag">ORGANIZERS</span></a><nav aria-label="Admin navigation"><a href="/">View website ↗</a><a href="/account/">My account</a><button id="lock" hidden>Lock</button><button id="sign-out" hidden>Sign out</button></nav></header>
   <main id="main" tabindex="-1">
-    <section id="gate" class="gate" aria-labelledby="gate-title"><p class="eyebrow">REFRACT / ADMIN</p><h1 id="gate-title">Registrations</h1><p id="gate-message" role="status">Checking your access…</p><a id="sign-in" class="button primary" href="/register/?next=admin" hidden>Organizer sign-in <span aria-hidden="true">↗</span></a><button id="switch-account" class="button" hidden>Use another account</button></section>
+    <section id="gate" class="gate"><p class="eyebrow">REFRACT / ADMIN</p><h1>Organizer dashboard</h1><p id="gate-message" role="status">Checking your access…</p><a id="sign-in" class="button primary" href="/register/?next=admin" hidden>Organizer sign-in ↗</a><button id="switch-account" class="button" hidden>Use another account</button></section>
+    <section id="password-gate" class="gate" hidden><p class="eyebrow">ADMIN / PRIVATE ACCESS</p><h1 id="password-title">Unlock dashboard</h1><p id="password-help"></p><form id="password-form"><label for="admin-password">Shared admin password</label><input id="admin-password" type="password" autocomplete="current-password" required maxlength="128"><div id="password-repeat" hidden><label for="admin-password-repeat">Confirm password</label><input id="admin-password-repeat" type="password" autocomplete="new-password" maxlength="128"></div><p id="password-error" class="inline-error" role="alert" hidden></p><button id="password-submit" type="submit" class="button primary">Unlock</button></form><p class="footnote">All admins use the same password, separate from Google, GitHub or email sign-in. Access expires after 30 minutes. If it’s lost, the site owner can reset it on the server.</p></section>
     <div id="dashboard" hidden>
-      <div class="page-heading"><div><p class="eyebrow">REFRACT / ADMIN</p><h1>Registrations</h1><p class="intro">Everyone who has submitted the registration form.</p></div><div class="account"><span class="live-dot" aria-hidden="true"></span><span id="account-email"></span></div></div>
-      <section class="summary" aria-label="Registration summary"><div><span class="stat-label">Total registrations</span><strong id="total">0</strong></div><div><span class="stat-label">Latest registration</span><strong id="latest" class="date">—</strong></div><div class="summary-note">Signing in alone doesn’t add someone to this list. A registration appears after they submit their details.</div></section>
-      <div class="toolbar"><div class="search"><label for="search">Find a registration</label><input id="search" type="search" maxlength="100" placeholder="Name, email or reference" autocomplete="off"></div><div class="sort"><label for="sort">Sort by</label><select id="sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name A–Z</option></select></div><button class="button" id="refresh">Refresh <span aria-hidden="true">↻</span></button><button class="button primary" id="export">Export CSV <span aria-hidden="true">↓</span></button></div>
-      <div class="list-heading"><h2>Participant list</h2><p id="results" role="status" aria-live="polite"></p></div>
-      <div class="table-wrap" id="table-wrap" tabindex="0" role="region" aria-label="Participant registrations"><table><caption class="sr-only">Submitted Refract registrations</caption><thead><tr><th scope="col">Participant</th><th scope="col">Reference</th><th scope="col">Registered</th><th scope="col">Status</th></tr></thead><tbody id="rows"></tbody></table></div>
-      <div id="empty" class="empty" hidden><span aria-hidden="true">↗</span><h2 id="empty-title">No registrations yet</h2><p id="empty-text">Completed registrations will appear here.</p></div>
-      <div class="pagination"><span id="page-info"></span><div><button id="previous" class="button">← Previous</button><button id="next" class="button">Next →</button></div></div>
-      <p class="footnote">“Received” means the form was submitted. It does not confirm an event place. Dates use your local time.</p>
+      <div class="page-heading"><div><p class="eyebrow">REFRACT / ADMIN</p><h1>Admin dashboard</h1><p class="intro">Accounts, registrations and a view of who’s visiting.</p></div><div class="account"><span class="live-dot" aria-hidden="true"></span><span id="account-email"></span></div></div>
+      <nav class="section-nav" aria-label="Dashboard sections"><button data-section="accounts" aria-pressed="true">Accounts</button><button data-section="registrations" aria-pressed="false">Registrations</button><button data-section="traffic" aria-pressed="false">Traffic</button><button data-section="activity" aria-pressed="false">Activity</button></nav>
+      <p id="notice" role="status" class="notice" hidden></p>
+      <section id="accounts-panel" aria-label="Accounts">
+        <div class="summary"><div><span class="stat-label">All accounts</span><strong id="account-total">—</strong></div><div><span class="stat-label">Verified emails</span><strong id="verified-total">—</strong></div><div><span class="stat-label">Admins</span><strong id="admin-total">—</strong></div></div>
+        <div class="toolbar"><div class="search"><label for="account-search">Find an account</label><input id="account-search" type="search" maxlength="100" placeholder="Name, email or reference" autocomplete="off"></div><div class="sort"><label for="role-filter">Access</label><select id="role-filter"><option value="all">Everyone</option><option value="admin">Admins</option><option value="participant">Participants</option></select></div><button class="button" data-refresh="accounts">Refresh ↻</button></div>
+        <div class="list-heading"><h2>All accounts</h2><p id="account-results" role="status"></p></div>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Accounts table"><table><thead><tr><th scope="col">Person</th><th scope="col">Sign-in</th><th scope="col">Access</th><th scope="col">Registration</th><th scope="col">Joined</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead><tbody id="account-rows"></tbody></table></div>
+        <p id="account-empty" class="empty" hidden>No accounts match your search</p>
+        <div class="pagination"><span id="account-page"></span><div><button id="account-previous" class="button">← Previous</button><button id="account-next" class="button">Next →</button></div></div>
+        <p class="footnote">Includes people who signed in without submitting a registration. Email addresses are verified sign-in identities; editing a name does not change the linked Google or GitHub account.</p>
+      </section>
+      <section id="registrations-panel" aria-label="Registrations" hidden>
+        <div class="summary"><div><span class="stat-label">Total registrations</span><strong id="total">—</strong></div><div><span class="stat-label">Latest registration</span><strong id="latest" class="date">—</strong></div><div class="summary-note">Manage a participant’s details and registration status in Accounts.</div></div>
+        <div class="toolbar"><div class="search"><label for="search">Find a registration</label><input id="search" type="search" maxlength="100" placeholder="Name, email or reference" autocomplete="off"></div><div class="sort"><label for="sort">Sort by</label><select id="sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name A–Z</option></select></div><button class="button" data-refresh="registrations">Refresh ↻</button><button class="button primary" id="export">Export CSV ↓</button></div>
+        <div class="list-heading"><h2>Submitted forms</h2><p id="results" role="status"></p></div>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Registrations table"><table><thead><tr><th scope="col">Participant</th><th scope="col">Reference</th><th scope="col">Registered</th><th scope="col">Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+        <p id="registration-empty" class="empty" hidden>No registrations match your search</p>
+        <div class="pagination"><span id="page-info"></span><div><button id="previous" class="button">← Previous</button><button id="next" class="button">Next →</button></div></div>
+        <p class="footnote">“Received” means the form was submitted, not that an event place has been approved. Dates use your local time.</p>
+      </section>
+      <section id="traffic-panel" aria-label="Website traffic" hidden>
+        <div class="summary"><div><span class="stat-label">Active in the last 5 min</span><strong id="traffic-active">—</strong></div><div><span class="stat-label">Visitors today</span><strong id="traffic-visitors">—</strong></div><div><span class="stat-label">Page views today</span><strong id="traffic-views">—</strong></div></div>
+        <div class="list-heading"><div><h2>Daily visitors</h2><p class="intro">Last 14 days · UTC</p></div><button class="button" data-refresh="traffic">Refresh ↻</button></div>
+        <div id="traffic-chart" class="traffic-chart" role="img" aria-label="Daily website visitors"></div>
+        <details class="traffic-details"><summary>View daily counts</summary><div class="table-wrap"><table><thead><tr><th>Date (UTC)</th><th>Visitors</th><th>Page views</th></tr></thead><tbody id="traffic-days"></tbody></table></div></details>
+        <div class="list-heading"><h2>Pages visited today</h2><p id="traffic-updated"></p></div><div id="traffic-pages" class="popular-pages"></div>
+        <p id="traffic-since" class="footnote"></p><p class="footnote">Visitors are approximate browser counts, not identified people. Multiple devices and automated visits can affect totals. Hidden tabs stop reporting activity. Do Not Track and Global Privacy Control are respected. Traffic records are kept for 30 calendar days; admin-page visits are excluded.</p>
+      </section>
+      <section id="activity-panel" aria-label="Admin activity" hidden><div class="list-heading"><h2>Recent admin changes</h2><button class="button" data-refresh="activity">Refresh ↻</button></div><div id="activity-list" class="activity-list"></div><p class="footnote">The 50 most recent changes, starting with this update. Deleted accounts appear without their names or emails.</p></section>
     </div>
     <div id="error" class="error" role="alert" hidden><span id="error-text"></span><button id="retry" class="button">Try again</button></div>
   </main>
+  <dialog id="account-dialog" aria-labelledby="edit-title">
+    <form id="edit-form"><div class="dialog-heading"><div><p class="eyebrow">ACCOUNT</p><h2 id="edit-title">Manage account</h2></div><button type="button" class="close" data-close="account-dialog" aria-label="Close account">×</button></div>
+      <p id="edit-email" class="dialog-email"></p><div id="edit-meta" class="edit-meta"></div>
+      <label for="edit-name">Account name</label><input id="edit-name" required minlength="2" maxlength="100" autocomplete="off">
+      <div id="registration-fields"><label for="edit-registered-name">Name on registration</label><input id="edit-registered-name" minlength="2" maxlength="100" autocomplete="off"><label for="edit-status">Registration status</label><select id="edit-status"><option value="pending">Received</option><option value="approved">Approved</option><option value="waitlisted">Waitlisted</option><option value="declined">Declined</option></select></div>
+      <p id="no-registration" class="footnote" hidden>This person hasn’t submitted a registration.</p>
+      <p id="edit-error" class="inline-error" role="alert" hidden></p>
+      <div class="dialog-actions"><button type="button" class="button" data-close="account-dialog">Close</button><button id="save-account" class="button primary" type="submit">Save changes</button></div>
+    </form>
+    <div class="access-controls"><h3>Access and security</h3><p id="access-description"></p><div class="access-buttons"><button id="toggle-admin" class="button" type="button">Make admin</button><button id="revoke-sessions" class="button" type="button">Sign out all devices</button><button id="delete-account" class="button danger" type="button">Delete account</button></div><p id="self-protection" class="footnote" hidden>Another admin must change your access or delete your account.</p></div>
+  </dialog>
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title"><form id="confirm-form"><p class="eyebrow">CONFIRM CHANGE</p><h2 id="confirm-title"></h2><p id="confirm-message"></p><div id="delete-confirmation" hidden><label for="confirm-email">Type the account’s email to confirm</label><input id="confirm-email" autocomplete="off" type="email"></div><p id="confirm-error" class="inline-error" role="alert" hidden></p><div class="dialog-actions"><button type="button" class="button" data-close="confirm-dialog">Cancel</button><button id="confirm-submit" type="submit" class="button primary">Confirm</button></div></form></dialog>
 </body>
 </html>
