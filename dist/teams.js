@@ -165,6 +165,9 @@
     }
   }, { threshold: [.0, .4] });
   updateMembers();
+  // Programmatic focus can retain :focus-visible after a pointer drop.
+  formation.addEventListener('pointerdown', () => formation.classList.add('is-pointer-interaction'));
+  document.addEventListener('keydown', () => formation.classList.remove('is-pointer-interaction'));
   people.forEach((person,index) => {
     person.setAttribute('aria-pressed', 'false');
     person.addEventListener('focus', () => people.forEach(p => p.tabIndex = p === person ? 0 : -1));
