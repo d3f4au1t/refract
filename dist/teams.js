@@ -25,6 +25,7 @@
   let finishTimer = 0;
   let layoutFrame = 0;
   let selected = null, destination = null, drag = null, ready = false, flashTimer = 0;
+  let sourcePreview = false;
   const members = team => people.filter(person => Number(person.dataset.team) === team);
   const invalidGroups = target => {
     if (!selected || target === Number(selected.dataset.team)) return [];
@@ -48,11 +49,14 @@
     return invalid;
   };
   const cancel = (keepFlash = false) => {
+    const restoreLayout = sourcePreview;
+    sourcePreview = false;
     if (drag && selected?.hasPointerCapture(drag.id)) selected.releasePointerCapture(drag.id);
     people.forEach(person => { person.classList.remove('is-dragging', 'is-selected'); person.setAttribute('aria-pressed', 'false'); });
     selected = null; drag = null; destination = null;
     formation.classList.remove('is-selecting');
     if (!keepFlash) { clearTimeout(flashTimer); clearHighlights(); }
+    if (restoreLayout) layout(true);
   };
   const select = person => {
     cancel(); selected = person; person.classList.add('is-selected');
@@ -109,10 +113,13 @@
       team.style.setProperty('--tile-x', `${(index % columns) * (tileWidth + gap)}px`);
       team.style.setProperty('--tile-y', `${Math.floor(index / columns) * (tileHeight + gap)}px`);
     });
+    // Preview the gap closing without committing membership or changing validation.
+    const arrangedGroups = teams.map((_,index) => members(index).filter(person => !sourcePreview || person !== selected));
     people.forEach((person, index) => {
       const team = Number(person.dataset.team);
-      const member = Number(person.dataset.member);
-      const size = Number(teams[team].dataset.size);
+      if (sourcePreview && person === selected) return;
+      const member = arrangedGroups[team].indexOf(person);
+      const size = arrangedGroups[team].length;
       const groupWidth = size * iconWidth + (size - 1) * memberGap;
       // Interleave team membership in the initial crowd so groups gather naturally.
       const gridIndex = (index * 17) % people.length;
@@ -187,7 +194,10 @@
       person.classList.add('is-dragging');
       person.style.setProperty('--drag-x', `${event.clientX-box.left-drag.dx}px`);
       person.style.setProperty('--drag-y', `${event.clientY-box.top-drag.dy}px`);
-      highlight(teamAt(event.clientX,event.clientY));
+      const target = teamAt(event.clientX,event.clientY);
+      const outsideSource = target !== Number(person.dataset.team);
+      if (sourcePreview !== outsideSource) { sourcePreview = outsideSource; layout(true); }
+      highlight(target);
     });
     person.addEventListener('pointerup', event => {
       if (!drag || drag.id !== event.pointerId) return;
