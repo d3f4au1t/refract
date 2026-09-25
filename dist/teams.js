@@ -15,6 +15,7 @@
   stage.setAttribute('aria-label', 'Example teams. Select a person, then a team. Use arrow keys to choose a team, Enter to move, Escape to cancel. Teams need 2 to 5 people.');
   formation.querySelector('.formation-art').removeAttribute('aria-hidden');
   const originalTeams = people.map(person => Number(person.dataset.team));
+  const originalPositions = people.map(person => Number(person.dataset.member));
   const teams = [...formation.querySelectorAll('.team-outline')];
   const status = formation.querySelector('.formation-status');
   const replay = formation.querySelector('.formation-replay');
@@ -25,8 +26,9 @@
   let finishTimer = 0;
   let layoutFrame = 0;
   let selected = null, destination = null, drag = null, ready = false, flashTimer = 0;
-  let sourcePreview = false;
-  const members = team => people.filter(person => Number(person.dataset.team) === team);
+  let sourcePreview = false, insertionPreview = null;
+  const members = team => people.filter(person => Number(person.dataset.team) === team)
+    .sort((a,b) => Number(a.dataset.member) - Number(b.dataset.member));
   const invalidGroups = target => {
     if (!selected || target === Number(selected.dataset.team)) return [];
     const source = Number(selected.dataset.team), invalid = [];
@@ -49,8 +51,8 @@
     return invalid;
   };
   const cancel = (keepFlash = false) => {
-    const restoreLayout = sourcePreview;
-    sourcePreview = false;
+    const restoreLayout = sourcePreview || insertionPreview !== null;
+    sourcePreview = false; insertionPreview = null;
     if (drag && selected?.hasPointerCapture(drag.id)) selected.releasePointerCapture(drag.id);
     people.forEach(person => { person.classList.remove('is-dragging', 'is-selected'); person.setAttribute('aria-pressed', 'false'); });
     selected = null; drag = null; destination = null;
@@ -74,16 +76,31 @@
       });
     });
   };
-  const drop = target => {
+  const insertionAt = (target, clientX) => {
+    const count = members(target).filter(person => person !== selected).length;
+    if (!Number.isFinite(clientX)) return count;
+    const box = teams[target].getBoundingClientRect();
+    const columns = Number(getComputedStyle(stage).getPropertyValue('--team-columns'));
+    const step = people[0].offsetWidth + (columns === 2 ? 5 : 10);
+    // Stable slots avoid oscillating as the neighboring icons animate out of the way.
+    const firstCenter = box.left + box.width / 2 - count * step / 2;
+    return Math.max(0,Math.min(count,Math.round((clientX-firstCenter)/step)));
+  };
+  const drop = (target, clientX) => {
     if (!selected) return;
     const person = selected, source = Number(person.dataset.team);
-    if (target === null || target === source) { cancel(); return; }
+    if (target === null || (target === source && !Number.isFinite(clientX))) { cancel(); return; }
     const invalid = highlight(target);
     if (invalid.length) {
       status.textContent = invalid.includes(source) ? `Team ${source+1} needs at least two people. Move cancelled.` : `Team ${target+1} already has five people. Move cancelled.`;
       cancel(true); flashTimer = setTimeout(clearHighlights, 900); return;
     }
-    person.dataset.team = String(target); cancel(); updateMembers(); layout(true);
+    const group = members(target).filter(member => member !== person);
+    const insertion = insertionAt(target,clientX);
+    group.splice(insertion,0,person);
+    person.dataset.team = String(target);
+    group.forEach((member,index) => member.dataset.member = String(index));
+    updateMembers(); cancel(); layout(true);
     status.textContent = `Person ${Number(person.dataset.person)+1} moved to team ${target+1}.`;
   };
   const teamAt = (x,y) => {
@@ -114,10 +131,11 @@
       team.style.setProperty('--tile-y', `${Math.floor(index / columns) * (tileHeight + gap)}px`);
     });
     // Preview the gap closing without committing membership or changing validation.
-    const arrangedGroups = teams.map((_,index) => members(index).filter(person => !sourcePreview || person !== selected));
+    const arrangedGroups = teams.map((_,index) => members(index).filter(person => !(sourcePreview || insertionPreview) || person !== selected));
+    if (insertionPreview) arrangedGroups[insertionPreview.team].splice(insertionPreview.index,0,selected);
     people.forEach((person, index) => {
       const team = Number(person.dataset.team);
-      if (sourcePreview && person === selected) return;
+      if ((sourcePreview || insertionPreview) && person === selected) return;
       const member = arrangedGroups[team].indexOf(person);
       const size = arrangedGroups[team].length;
       const groupWidth = size * iconWidth + (size - 1) * memberGap;
@@ -146,7 +164,7 @@
     clearTimeout(groupTimer);
     clearTimeout(finishTimer);
     cancel(); ready = false; formation.classList.remove('is-interactive');
-    people.forEach((person,index) => { person.disabled = true; person.dataset.team = String(originalTeams[index]); });
+    people.forEach((person,index) => { person.disabled = true; person.dataset.team = String(originalTeams[index]); person.dataset.member = String(originalPositions[index]); });
     updateMembers(); layout();
     formation.dataset.phase = 'grid';
     status.textContent = 'Example: 60 students';
@@ -180,7 +198,7 @@
     person.addEventListener('focus', () => people.forEach(p => p.tabIndex = p === person ? 0 : -1));
     person.addEventListener('pointerdown', event => {
       if (!ready || !event.isPrimary || event.button !== 0) return;
-      if (selected && selected !== person) { drop(Number(person.dataset.team)); return; }
+      if (selected && selected !== person) { drop(Number(person.dataset.team),event.clientX); return; }
       const wasSelected = selected === person;
       select(person); person.focus({preventScroll:true});
       const box = person.getBoundingClientRect();
@@ -196,15 +214,18 @@
       person.style.setProperty('--drag-y', `${event.clientY-box.top-drag.dy}px`);
       const target = teamAt(event.clientX,event.clientY);
       const outsideSource = target !== Number(person.dataset.team);
-      if (sourcePreview !== outsideSource) { sourcePreview = outsideSource; layout(true); }
-      highlight(target);
+      const invalid = highlight(target);
+      const preview = target !== null && !invalid.length ? {team:target,index:insertionAt(target,event.clientX)} : null;
+      if (sourcePreview !== outsideSource || insertionPreview?.team !== preview?.team || insertionPreview?.index !== preview?.index) {
+        sourcePreview = outsideSource; insertionPreview = preview; layout(true);
+      }
     });
     person.addEventListener('pointerup', event => {
       if (!drag || drag.id !== event.pointerId) return;
       const {moved,wasSelected} = drag; drag = null;
       if (person.hasPointerCapture(event.pointerId)) person.releasePointerCapture(event.pointerId);
       person.classList.remove('is-dragging');
-      if (moved) drop(teamAt(event.clientX,event.clientY));
+      if (moved) drop(teamAt(event.clientX,event.clientY),event.clientX);
       else if (wasSelected) cancel();
       else highlight(null);
     });
@@ -231,7 +252,7 @@
     });
   });
   teams.forEach((team,index) => {
-    team.addEventListener('pointerdown', event => { if (ready && selected && event.isPrimary && event.button === 0) { event.preventDefault(); drop(index); } });
+    team.addEventListener('pointerdown', event => { if (ready && selected && event.isPrimary && event.button === 0) { event.preventDefault(); drop(index,event.clientX); } });
     team.addEventListener('pointerenter', () => { if (selected && !drag) highlight(index); });
   });
   document.addEventListener('pointerdown', event => { if (selected && !stage.contains(event.target)) cancel(); });

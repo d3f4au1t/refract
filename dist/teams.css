@@ -51,11 +51,13 @@ button.person{padding:0;border:0;background:none;border-radius:4px;line-height:0
 .formation-stage.is-ready .person.is-dragging{transform:translate(var(--drag-x),var(--drag-y));transition:none;z-index:5;pointer-events:auto}
 .team-formation.is-selecting .team-outline{pointer-events:auto;cursor:pointer;border-radius:18px}
 .team-outline.is-target{background:radial-gradient(ellipse,#b2ddf014,transparent 72%)}
-.team-outline.is-invalid{background:radial-gradient(ellipse,#ff425532,transparent 72%);animation:team-invalid .45s ease-in-out infinite alternate}
+.team-outline::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(ellipse,#ff425532,transparent 72%);opacity:0;transition:opacity .4s ease-out}
+.team-outline.is-invalid::after{opacity:1;animation:team-warning-glow .45s ease-in-out infinite alternate}
+@keyframes team-warning-glow{from{filter:brightness(1)}to{filter:brightness(.45)}}
 .person.is-invalid{color:#ff697b!important;filter:drop-shadow(0 0 5px #ff4255);animation:team-invalid .45s ease-in-out infinite alternate}
 @keyframes team-invalid{from{opacity:1}to{opacity:.45}}
-@media(prefers-reduced-motion:reduce){.team-outline.is-invalid,.person.is-invalid{animation:none}}
+@media(prefers-reduced-motion:reduce){.team-outline.is-invalid::after,.person.is-invalid{animation:none}}
 
-.team-formation.is-interactive .person{transition:transform .25s ease,color .15s ease}
+.team-formation.is-interactive .person{transition:transform .25s ease,color .4s ease-out,filter .4s ease-out}
 .formation-stage.is-ready .person.is-dragging{transition:none}
 @media(prefers-reduced-motion:reduce){.team-formation.is-interactive .person{transition:none}}
