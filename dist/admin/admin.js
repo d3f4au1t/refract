@@ -86,7 +86,35 @@
     if(!data.popular.length)$('#traffic-pages').append(el('p','No visits recorded today','muted'));
     $('#traffic-updated').textContent=`Updated ${date(data.updatedAt)}`;$('#traffic-since').textContent=`Collection started ${date(data.startedAt)}. Earlier dates have no recorded data. Updates every minute while this panel is open.`;
   }
-  function renderActivity(data){$('#activity-list').replaceChildren(...data.events.map(event=>{const item=el('div',undefined,'activity-item');item.append(el('strong',event.action),el('time',date(event.createdAt)),el('p',`${event.actor} → ${event.target}`));return item;}));}
+  function renderActivity(data) {
+    const detailedDate = value => new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'long'}).format(new Date(value));
+    $('#activity-list').replaceChildren(...data.events.map(event => {
+      const item=el('article',undefined,'activity-item');
+      const heading=el('div',undefined,'activity-heading'),time=el('time',detailedDate(event.createdAt));
+      time.dateTime=event.createdAt;
+      heading.append(el('strong',event.action),el('span',`Entry #${event.id}`,'activity-id'),time);item.append(heading);
+      const identities=el('div',undefined,'activity-identities');
+      for(const [label,name,email,id] of [['Changed by',event.actor,event.actorEmail,event.actorId],['Account affected',event.target,event.targetEmail,event.targetId]]) {
+        const block=el('div');block.append(el('span',label,'stat-label'),el('strong',name),el('span',email||`Deleted account · ${id.slice(-8)}`,'email'));identities.append(block);
+      }
+      item.append(identities);
+      if(event.reference)item.append(el('p',`Registration ${event.reference}`,'reference'));
+      if(!event.details)item.append(el('p',event.targetEmail?'Detailed changes weren’t recorded for this older entry.':'Personal change details are unavailable for deleted accounts.','activity-note'));
+      else if(event.details.changes) {
+        if(!event.details.changes.length)item.append(el('p','Saved without changing any field values.','activity-note'));
+        else {
+          const wrap=el('div',undefined,'table-wrap'),table=el('table'),head=el('thead'),headRow=el('tr'),body=el('tbody');
+          table.append(el('caption',`Changes in entry ${event.id}`,'sr-only'));
+          for(const label of ['Field','Before','After']){const th=el('th',label);th.scope='col';headRow.append(th);}head.append(headRow);
+          for(const change of event.details.changes){const row=el('tr');const value=text=>change.field==='Registration status'?statusName(text):String(text??'—');row.append(el('td',change.field),el('td',value(change.before),'change-before'),el('td',value(change.after),'change-after'));body.append(row);}
+          table.append(head,body);wrap.append(table);item.append(wrap);
+        }
+      } else if(event.details.facts) {
+        const facts=el('dl',undefined,'activity-facts');for(const fact of event.details.facts){const entry=el('div');entry.append(el('dt',fact.label),el('dd',String(fact.value)));facts.append(entry);}item.append(facts);
+      }
+      return item;
+    }));
+  }
   async function load(){
     if(!state.unlocked)return;
     clearTimeout(debounce);controller?.abort();controller=new AbortController();const current=++epoch,section=state.section;

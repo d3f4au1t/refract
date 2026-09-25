@@ -74,7 +74,7 @@ If the shared password is lost, the server owner can reset it. On the server, st
 
 For emergency role recovery, verify the intended person in the private `user` table and insert their immutable account ID into `admin_roles`. Normal role management must use the dashboard. An admin cannot remove their own access, sign themselves out through account management, or delete their own account.
 
-Accounts includes people who signed in but did not register. Names and registration status are editable; verified email identities are not. Deleting an account removes its registration, provider links, sessions and role from the live database. Older backups remain subject to the backup retention policy. The person can sign up again. Admin actions record account IDs, action names and timestamps; the activity display resolves names only for accounts that still exist.
+Accounts includes people who signed in but did not register. Names and registration status are editable; verified email identities are not. Deleting an account removes its registration, provider links, sessions and role from the live database. Older backups remain subject to the backup retention policy. The person can sign up again. Admin actions record account IDs, timestamps, changed field values and action counts. Activity shows before/after values for new changes, and resolves names, emails and registration references for existing accounts. Deletion clears historical personal change details for the affected account; older entries without details remain readable as summaries.
 
 The submitted-registration list and CSV remain separate from all accounts. CSV output neutralizes spreadsheet formulas. Treat downloaded files as private participant data.
 

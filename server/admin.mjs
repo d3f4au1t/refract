@@ -13,6 +13,9 @@ export function installAdminRoutes(app, { db, requireUser, adminUserIds = [] }) 
       id INTEGER PRIMARY KEY, actor_id TEXT NOT NULL, target_id TEXT NOT NULL,
       action TEXT NOT NULL, created_at TEXT NOT NULL
     );`);
+  if (!db.prepare('PRAGMA table_info(admin_activity)').all().some(column => column.name === 'details')) {
+    db.exec('ALTER TABLE admin_activity ADD COLUMN details TEXT');
+  }
   // Import the private bootstrap list once. Removed admins stay removed after a restart.
   if (!db.prepare("SELECT 1 FROM admin_settings WHERE key='roles_initialized'").get()) {
     db.exec('BEGIN IMMEDIATE');
@@ -23,8 +26,8 @@ export function installAdminRoutes(app, { db, requireUser, adminUserIds = [] }) 
     } catch (error) { db.exec('ROLLBACK'); throw error; }
   }
   const isAdmin = id => Boolean(db.prepare('SELECT 1 FROM admin_roles WHERE user_id=?').get(id));
-  const audit = (req, action) => db.prepare('INSERT INTO admin_activity(actor_id,target_id,action,created_at) VALUES(?,?,?,?)')
-    .run(req.user.id, req.params.id, action, new Date().toISOString());
+  const audit = (req, action, details) => db.prepare('INSERT INTO admin_activity(actor_id,target_id,action,created_at,details) VALUES(?,?,?,?,?)')
+    .run(req.user.id, req.params.id, action, new Date().toISOString(), JSON.stringify(details));
   const transaction = fn => {
     db.exec('BEGIN IMMEDIATE');
     try { fn(); db.exec('COMMIT'); } catch (error) { db.exec('ROLLBACK'); throw error; }
@@ -73,7 +76,12 @@ export function installAdminRoutes(app, { db, requireUser, adminUserIds = [] }) 
     transaction(() => {
       db.prepare('UPDATE user SET name=?, updatedAt=? WHERE id=?').run(name,Date.now(),req.params.id);
       if (req.target.reference) db.prepare('UPDATE registrations SET name=?,status=?,updated_at=? WHERE user_id=?').run(registeredName,body.status,new Date().toISOString(),req.params.id);
-      audit(req,'Account details updated');
+      const changes = [{ field:'Account name', before:req.target.name, after:name }];
+      if (req.target.reference) changes.push(
+        { field:'Registration name', before:req.target.registeredName, after:registeredName },
+        { field:'Registration status', before:req.target.status, after:body.status }
+      );
+      audit(req,'Account details updated',{ changes:changes.filter(change => change.before !== change.after) });
     });
     res.json({ account:accountFor(req.params.id) });
   });
@@ -86,22 +94,29 @@ export function installAdminRoutes(app, { db, requireUser, adminUserIds = [] }) 
         db.prepare('DELETE FROM admin_roles WHERE user_id=?').run(req.params.id);
         db.prepare('DELETE FROM admin_unlocks WHERE user_id=?').run(req.params.id);
       }
-      audit(req,req.body.enabled ? 'Admin access granted' : 'Admin access removed');
+      audit(req,req.body.enabled ? 'Admin access granted' : 'Admin access removed',{ changes:[{ field:'Admin access', before:req.target.isAdmin ? 'Admin' : 'Participant', after:req.body.enabled ? 'Admin' : 'Participant' }].filter(change => change.before !== change.after) });
     });
     res.json({ account:accountFor(req.params.id) });
   });
   app.post('/api/admin/accounts/:id/revoke-sessions', target, otherAccount, (req, res) => {
     transaction(() => {
       db.prepare('DELETE FROM admin_unlocks WHERE user_id=?').run(req.params.id);
-      db.prepare('DELETE FROM session WHERE userId=?').run(req.params.id);
-      audit(req,'Signed out on all devices');
+      const result = db.prepare('DELETE FROM session WHERE userId=?').run(req.params.id);
+      audit(req,'Signed out on all devices',{ facts:[{ label:'Sessions revoked', value:Number(result.changes) }] });
     });
     res.json({ ok:true });
   });
   app.post('/api/admin/accounts/:id/delete', target, otherAccount, (req, res) => {
     if (!validBody(req.body,['confirmEmail']) || req.body.confirmEmail !== req.target.email) return res.status(400).json({ message: 'Type the account’s email address exactly to confirm deletion.' });
     transaction(() => {
-      audit(req,'Account deleted');
+      // Delete historical name snapshots along with the account's personal data.
+      db.prepare('UPDATE admin_activity SET details=NULL WHERE target_id=?').run(req.params.id);
+      audit(req,'Account deleted',{ facts:[
+        { label:'Registration removed', value:req.target.reference ? 'Yes' : 'No' },
+        { label:'Provider links removed', value:db.prepare('SELECT COUNT(*) AS n FROM account WHERE userId=?').get(req.params.id).n },
+        { label:'Sessions revoked', value:db.prepare('SELECT COUNT(*) AS n FROM session WHERE userId=?').get(req.params.id).n },
+        { label:'Admin access removed', value:req.target.isAdmin ? 'Yes' : 'No' }
+      ] });
       db.prepare('DELETE FROM admin_roles WHERE user_id=?').run(req.params.id);
       db.prepare('DELETE FROM admin_unlocks WHERE user_id=?').run(req.params.id);
       db.prepare('DELETE FROM session WHERE userId=?').run(req.params.id);
@@ -114,10 +129,12 @@ export function installAdminRoutes(app, { db, requireUser, adminUserIds = [] }) 
     res.json({ ok:true });
   });
   app.get('/api/admin/activity', (_req,res) => {
-    const events = db.prepare(`SELECT a.id,a.action,a.created_at AS createdAt,
+    const events = db.prepare(`SELECT a.id,a.action,a.created_at AS createdAt,a.details,a.actor_id AS actorId,a.target_id AS targetId,
+      actor.email AS actorEmail,target.email AS targetEmail,r.reference,
       COALESCE(actor.name,'Deleted account') AS actor, COALESCE(target.name,'Deleted account') AS target
       FROM admin_activity a LEFT JOIN user actor ON actor.id=a.actor_id LEFT JOIN user target ON target.id=a.target_id
-      ORDER BY a.id DESC LIMIT 50`).all();
+      LEFT JOIN registrations r ON r.user_id=a.target_id
+      ORDER BY a.id DESC LIMIT 50`).all().map(event => ({ ...event, details:event.details ? JSON.parse(event.details) : null }));
     res.json({ events });
   });
   const filters = (req, res, next) => {

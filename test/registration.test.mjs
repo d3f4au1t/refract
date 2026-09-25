@@ -522,12 +522,42 @@ test('admins can edit names and registration status, grant and revoke access imm
   assert.equal((await admin('/api/admin/activity')).data.events.length,3);
 });
 
+test('activity records identities, immutable changed values, no-op edits and legacy entries',async t=>{
+  const f=await organizerFixture(t);seedUser(f,'audit-target','audit@example.com','Original Profile');
+  const stamp=new Date().toISOString();
+  f.db.prepare('INSERT INTO registrations VALUES(?,?,?,1,?,?,?)').run('audit-target','RF-ABC12345','Original Student','pending',stamp,stamp);
+  const admin=(path,body)=>f.request(path,body,f.adminCookie),url='/api/admin/accounts/audit-target';
+  const update={name:'Updated Profile',registeredName:'Updated Student',status:'approved'};
+  assert.equal((await admin(url+'/edit',update)).status,200);
+  let events=(await admin('/api/admin/activity')).data.events,event=events[0];
+  assert.equal(event.actorId,'organizer');assert.equal(event.actorEmail,'organizer@example.com');
+  assert.equal(event.targetId,'audit-target');assert.equal(event.targetEmail,'audit@example.com');assert.equal(event.reference,'RF-ABC12345');
+  assert.ok(Number.isFinite(Date.parse(event.createdAt)));
+  assert.deepEqual(event.details.changes,[
+    {field:'Account name',before:'Original Profile',after:'Updated Profile'},
+    {field:'Registration name',before:'Original Student',after:'Updated Student'},
+    {field:'Registration status',before:'pending',after:'approved'}
+  ]);
+  await admin(url+'/edit',update);
+  events=(await admin('/api/admin/activity')).data.events;
+  assert.deepEqual(events[0].details.changes,[]);assert.deepEqual(events[1].details,event.details);
+  await admin(url+'/admin',{enabled:true});
+  assert.deepEqual((await admin('/api/admin/activity')).data.events[0].details.changes,[{field:'Admin access',before:'Participant',after:'Admin'}]);
+  await admin(url+'/admin',{enabled:false});
+  assert.deepEqual((await admin('/api/admin/activity')).data.events[0].details.changes,[{field:'Admin access',before:'Admin',after:'Participant'}]);
+  f.db.prepare('INSERT INTO admin_activity(actor_id,target_id,action,created_at) VALUES(?,?,?,?)').run('organizer','audit-target','Account details updated',stamp);
+  assert.equal((await admin('/api/admin/activity')).data.events[0].details,null);
+});
+
 test('account deletion requires exact confirmation, removes sign-ins, and invalidates sessions',async t=>{
   const f=await organizerFixture(t);
   await f.send('delete@example.com');const member=await f.verify('delete@example.com',f.emails.at(-1).otp),id=member.data.user.id;
   await f.request('/api/registration',{name:'Delete Student',student:true},member.cookie);
   f.db.prepare('INSERT INTO account(id,accountId,providerId,userId,createdAt,updatedAt) VALUES(?,?,?,?,?,?)').run('linked-github','test-provider-id','github',id,Date.now(),Date.now());
   const url=`/api/admin/accounts/${id}`;
+  await f.request(url+'/edit',{name:'Private Previous Name',registeredName:'Private Registration Name',status:'approved'},f.adminCookie);
+  const sessionCount=f.db.prepare('SELECT COUNT(*) AS n FROM session WHERE userId=?').get(id).n;
+  const providerCount=f.db.prepare('SELECT COUNT(*) AS n FROM account WHERE userId=?').get(id).n;
   assert.equal((await f.request(url+'/delete',{confirmEmail:'wrong@example.com'},f.adminCookie)).status,400);
   assert.equal((await f.request(url+'/delete',{confirmEmail:'delete@example.com'},member.cookie)).status,403);
   assert.equal((await f.request(url+'/delete',{confirmEmail:'delete@example.com'},f.adminCookie,'https://attacker.example')).status,403);
@@ -537,14 +567,19 @@ test('account deletion requires exact confirmation, removes sign-ins, and invali
   assert.equal((await f.request(url+'/delete',{confirmEmail:'delete@example.com'},f.adminCookie)).status,404);
   const log=(await f.request('/api/admin/activity',undefined,f.adminCookie)).data.events;
   assert.equal(log[0].target,'Deleted account');assert.equal(JSON.stringify(log).includes('delete@example.com'),false);
+  assert.equal(JSON.stringify(log).includes('Private Previous Name'),false);assert.equal(JSON.stringify(log).includes('Private Registration Name'),false);
+  assert.equal(log[1].details,null);
+  assert.deepEqual(log[0].details.facts,[{label:'Registration removed',value:'Yes'},{label:'Provider links removed',value:providerCount},{label:'Sessions revoked',value:sessionCount},{label:'Admin access removed',value:'No'}]);
 });
 
 test('sign out all devices preserves the account and registration',async t=>{
   const f=await organizerFixture(t);await f.send('sessions@example.com');const member=await f.verify('sessions@example.com',f.emails.at(-1).otp);
   await f.request('/api/registration',{name:'Session Student',student:true},member.cookie);
+  const count=f.db.prepare('SELECT COUNT(*) AS n FROM session WHERE userId=?').get(member.data.user.id).n;
   assert.equal((await f.request(`/api/admin/accounts/${member.data.user.id}/revoke-sessions`,{},f.adminCookie)).status,200);
   assert.equal((await f.request('/api/registration',undefined,member.cookie)).status,401);
   assert.equal(f.db.prepare('SELECT COUNT(*) AS n FROM registrations').get().n,1);
+  assert.deepEqual((await f.request('/api/admin/activity',undefined,f.adminCookie)).data.events[0].details.facts,[{label:'Sessions revoked',value:count}]);
 });
 
 test('admin roles persist across restart without re-importing removed bootstrap admins',async t=>{
